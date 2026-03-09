@@ -1,0 +1,96 @@
+{
+  "projectType": "general",
+  "projectName": "WordPress Developer Showcase",
+  "projectDescription": "A showcase of WordPress 6.9+ features including custom post types, Full Site Editing themes, and modern development patterns.",
+  "theme": "palm",
+  "primaryColor": "#663ebc",
+  "lightColor": "#b49cdc",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "setup",
+              "requirements"
+            ]
+          },
+          {
+            "group": "Plugin Development",
+            "pages": [
+              "plugin/overview",
+              "plugin/architecture",
+              "plugin/custom-post-types",
+              "plugin/taxonomies",
+              "plugin/block-editor-integration"
+            ]
+          },
+          {
+            "group": "Theme Development",
+            "pages": [
+              "theme/overview",
+              "theme/full-site-editing",
+              "theme/theme-json",
+              "theme/patterns",
+              "theme/templates"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/getting-started",
+              "contributing/workflow",
+              "contributing/standards"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Plugin API",
+            "pages": [
+              "api/plugin/post-types",
+              "api/plugin/taxonomies",
+              "api/plugin/rest-api"
+            ]
+          },
+          {
+            "group": "Theme API",
+            "pages": [
+              "api/theme/hooks",
+              "api/theme/functions"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Custom post types (Artists, Albums) with hierarchical relationships",
+    "Block Editor integration with parent selector component",
+    "Custom taxonomy (Genres) for music categorization",
+    "Full Site Editing theme with modern patterns",
+    "Service container architecture with dependency injection",
+    "REST API integration for custom post types",
+    "Theme.json v3 configuration",
+    "Automated deployment workflow with GitHub Actions"
+  ],
+  "publicApiSurface": [
+    "register_post_type('music_artist')",
+    "register_post_type('music_album')",
+    "register_taxonomy('music_genre')",
+    "Bifrost\\Music\\Plugin",
+    "Bifrost\\Music\\Content\\Album",
+    "Bifrost\\Music\\Content\\Artist",
+    "Bifrost\\Music\\Content\\Genre",
+    "Bifrost\\Music\\Core\\Application",
+    "Bifrost\\Music\\Container\\ServiceContainer",
+    "Bifrost\\Noise\\Theme"
+  ]
+}
