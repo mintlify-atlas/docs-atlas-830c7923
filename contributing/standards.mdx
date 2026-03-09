@@ -1,0 +1,379 @@
+---
+title: Coding Standards
+description: Coding standards, commit message format, and quality guidelines for the project
+---
+
+Maintaining consistent coding standards ensures code quality, readability, and maintainability across the project.
+
+## PHP Coding Standards
+
+This project follows **WordPress Coding Standards** for PHP code.
+
+### Tools and Configuration
+
+The project uses PHP_CodeSniffer (PHPCS) with the following rulesets:
+
+- **WordPress Coding Standards** (`wp-coding-standards/wpcs`)
+- **PHP Compatibility** (`phpcompatibility/phpcompatibility-wp`)
+
+<Note>
+  These tools are automatically configured when you run `composer dev` in a theme or plugin directory.
+</Note>
+
+### Running Code Linting
+
+<Steps>
+  <Step title="Install dev dependencies">
+    ```bash
+    cd themes/bifrost-noise  # or plugins/bifrost-music
+    composer dev
+    ```
+  </Step>
+
+  <Step title="Run the linter">
+    ```bash
+    composer lint:php
+    ```
+
+    This runs:
+    ```bash
+    ./vendor/bin/phpcs -d error_reporting=E_ALL^E_DEPRECATED -s --colors .
+    ```
+  </Step>
+
+  <Step title="Fix issues">
+    Review the output and fix any coding standard violations before committing.
+  </Step>
+</Steps>
+
+### PHP Version Requirements
+
+- **Minimum PHP version:** 8.0+
+- **Project standard:** PHP 8.1+
+
+<Warning>
+  Ensure your code is compatible with PHP 8.1 and above. The PHP Compatibility checker will catch incompatible syntax.
+</Warning>
+
+### PSR-4 Autoloading
+
+Both themes and plugins use PSR-4 autoloading:
+
+**Theme (bifrost-noise):**
+```json
+"autoload": {
+  "psr-4": {
+    "Bifrost\\Noise\\": "src/"
+  }
+}
+```
+
+**Plugin (bifrost-music):**
+```json
+"autoload": {
+  "psr-4": {
+    "Bifrost\\Music\\": "inc/"
+  }
+}
+```
+
+<Accordion title="Class naming and file structure">
+  Follow PSR-4 conventions:
+  
+  - Class `Bifrost\Noise\Admin\Settings` → `src/Admin/Settings.php`
+  - Class `Bifrost\Music\API\Endpoint` → `inc/API/Endpoint.php`
+  - Use UpperCamelCase for class names
+  - One class per file
+</Accordion>
+
+### WordPress-Specific Standards
+
+Follow WordPress best practices:
+
+<CardGroup cols={2}>
+  <Card title="Naming Conventions" icon="tag">
+    - Functions: `snake_case`
+    - Classes: `PascalCase`
+    - Constants: `UPPERCASE_SNAKE_CASE`
+    - Hooks: `prefix_hook_name`
+  </Card>
+  
+  <Card title="Security" icon="shield">
+    - Escape output: `esc_html()`, `esc_attr()`, `esc_url()`
+    - Sanitize input: `sanitize_text_field()`, etc.
+    - Validate and sanitize all user input
+    - Use nonces for forms
+  </Card>
+  
+  <Card title="Database" icon="database">
+    - Use `$wpdb->prepare()` for queries
+    - Never concatenate user input into SQL
+    - Use WordPress functions when available
+  </Card>
+  
+  <Card title="Internationalization" icon="globe">
+    - Wrap strings in `__()`, `_e()`, `_n()`
+    - Use text domain consistently
+    - Make all user-facing strings translatable
+  </Card>
+</CardGroup>
+
+## JavaScript Standards
+
+For JavaScript and React code:
+
+- Use **modern ES6+ syntax**
+- Follow WordPress Gutenberg coding standards for block development
+- Use `@wordpress/scripts` for build tooling when applicable
+- Ensure code is linted before committing
+
+## CSS/SCSS Standards
+
+- Follow **WordPress CSS Coding Standards**
+- Use BEM methodology for class naming when appropriate
+- Prefer CSS custom properties for theming
+- Ensure responsive design principles are followed
+
+## Commit Message Format
+
+This project follows **Conventional Commits** specification.
+
+### Format
+
+```
+<type>: <short description>
+
+[optional body]
+
+[optional footer]
+```
+
+### Types
+
+| Type | Description | Example |
+|------|-------------|----------|
+| `feat` | New feature | `feat: add user registration endpoint` |
+| `fix` | Bug fix | `fix: resolve null pointer in auth service` |
+| `docs` | Documentation changes | `docs: update API documentation` |
+| `style` | Code style changes (formatting, etc.) | `style: format code with phpcs` |
+| `refactor` | Code refactoring | `refactor: extract authentication logic` |
+| `test` | Adding or updating tests | `test: add unit tests for user model` |
+| `chore` | Maintenance tasks | `chore: update composer dependencies` |
+
+### Examples
+
+<Accordion title="Good commit messages">
+  ```bash
+  feat: add REST API endpoints for custom post types
+  
+  fix: resolve navigation menu alignment on mobile devices
+  
+  docs: add contributing guidelines for new developers
+  
+  refactor: extract block registration into separate files
+  
+  chore: update WordPress coding standards to 3.0
+  ```
+</Accordion>
+
+<Accordion title="Commit message best practices">
+  - **Use the imperative mood:** "add feature" not "added feature"
+  - **Be concise:** Keep the summary line under 72 characters
+  - **Explain why, not what:** The diff shows what changed; explain why
+  - **Reference issues:** Include issue numbers when applicable: `fix: #123 resolve login bug`
+  - **Separate subject from body:** Use a blank line between summary and detailed description
+</Accordion>
+
+### Writing Good Commit Messages
+
+<Steps>
+  <Step title="Write a clear summary">
+    Start with a type prefix and a concise description:
+    ```bash
+    feat: add block editor integration
+    ```
+  </Step>
+
+  <Step title="Add a detailed body (if needed)">
+    Explain the reasoning and context:
+    ```bash
+    feat: add block editor integration
+
+    Implements custom blocks for the music player functionality.
+    This allows users to embed music players directly in posts
+    and pages using the block editor.
+
+    Includes:
+    - Music player block
+    - Playlist block
+    - Album cover block
+    ```
+  </Step>
+
+  <Step title="Reference related issues">
+    Link to relevant issues or pull requests:
+    ```bash
+    fix: resolve mobile navigation menu issues
+
+    Fixes #42
+    Related to #38
+    ```
+  </Step>
+</Steps>
+
+## Testing
+
+### Before Committing
+
+Run these checks before committing:
+
+```bash
+# PHP linting
+composer lint:php
+
+# Build assets (if applicable)
+npm run build
+
+# Test in local WordPress installation
+```
+
+### Testing in Staging
+
+<Note>
+  All changes must be tested in the staging environment before merging to trunk.
+</Note>
+
+After merging to `staging`, verify:
+
+- Functionality works as expected
+- No PHP errors or warnings
+- No JavaScript console errors
+- Responsive design works across devices
+- No performance regressions
+- WordPress admin area remains functional
+
+## Code Review Guidelines
+
+When reviewing pull requests:
+
+<CardGroup cols={2}>
+  <Card title="Code Quality" icon="code">
+    - Follows WordPress coding standards
+    - No obvious bugs or security issues
+    - Proper error handling
+    - Code is readable and maintainable
+  </Card>
+  
+  <Card title="Functionality" icon="check">
+    - Meets requirements
+    - Works in staging environment
+    - No breaking changes (or properly documented)
+    - Edge cases are handled
+  </Card>
+  
+  <Card title="Documentation" icon="book">
+    - Code is properly commented
+    - DocBlocks for functions and classes
+    - README updated if needed
+    - Inline comments for complex logic
+  </Card>
+  
+  <Card title="Testing" icon="flask">
+    - Tested in staging
+    - QA approval obtained
+    - No regressions introduced
+    - Performance impact considered
+  </Card>
+</CardGroup>
+
+## Documentation Standards
+
+### PHP Documentation
+
+Use PHPDoc format for all functions and classes:
+
+```php
+/**
+ * Register custom post types for the music plugin.
+ *
+ * @since 1.0.0
+ *
+ * @return void
+ */
+function register_music_post_types() {
+    // Implementation
+}
+```
+
+### Inline Comments
+
+Add comments for complex logic:
+
+```php
+// Check if user has permission before showing admin menu
+if ( current_user_can( 'manage_options' ) ) {
+    add_menu_page( /* ... */ );
+}
+```
+
+### README Files
+
+Keep README files up to date:
+
+- Installation instructions
+- Configuration options
+- Usage examples
+- API documentation
+
+## Build and Deployment
+
+### Composer Scripts
+
+Available composer scripts:
+
+| Script | Purpose | Command |
+|--------|---------|----------|
+| `build` | Production build | `composer build` |
+| `dev` | Development dependencies | `composer dev` |
+| `lint:php` | Run PHP linting | `composer lint:php` |
+| `zip` | Create distribution archive | `composer zip` |
+
+### Vendor Folder Management
+
+<Warning>
+  Never commit the `vendor/` folder to the repository. It's automatically deployed via GitHub Actions.
+</Warning>
+
+The deployment workflow:
+1. Runs on push to `trunk` or `staging`
+2. Executes `composer install --no-dev`
+3. Uploads vendor folder to the appropriate environment
+4. Uses GitHub Environments for credentials
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="WordPress Coding Standards" icon="link" href="https://developer.wordpress.org/coding-standards/">
+    Official WordPress coding standards documentation
+  </Card>
+  
+  <Card title="Conventional Commits" icon="link" href="https://www.conventionalcommits.org/">
+    Learn more about the Conventional Commits specification
+  </Card>
+  
+  <Card title="PHP_CodeSniffer" icon="link" href="https://github.com/squizlabs/PHP_CodeSniffer">
+    PHP_CodeSniffer documentation and usage
+  </Card>
+  
+  <Card title="WordPress Developer Resources" icon="link" href="https://developer.wordpress.org/">
+    Comprehensive WordPress development documentation
+  </Card>
+</CardGroup>
+
+## Questions?
+
+If you have questions about coding standards:
+
+- Open an issue with the `question` label
+- Ask in code review comments
+- Reach out to maintainers

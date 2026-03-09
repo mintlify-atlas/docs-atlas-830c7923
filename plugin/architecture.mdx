@@ -1,0 +1,343 @@
+---
+title: Plugin Architecture
+description: Understanding the service container, service providers, and application lifecycle
+---
+
+The Bifrost Music plugin uses a **dependency injection container** and **service provider pattern** to organize code and manage dependencies. This architecture is inspired by modern PHP frameworks like Laravel.
+
+## Service Container
+
+The service container is responsible for managing class dependencies and performing dependency injection.
+
+### Container Interface
+
+Location: `inc/Container/ServiceContainer.php:25`
+
+The container provides three binding methods:
+
+```php
+// Transient binding - new instance every time
+public function transient(string $abstract, mixed $concrete = null): void
+
+// Singleton binding - same instance every time
+public function singleton(string $abstract, mixed $concrete = null): void
+
+// Register an existing instance
+public function instance(string $abstract, mixed $instance): void
+```
+
+### Automatic Dependency Resolution
+
+The container automatically resolves dependencies using PHP reflection:
+
+```php
+private function resolveDependencies(array $params, array $providedParams): array
+{
+    $dependencies = [];
+
+    foreach ($params as $param) {
+        $name = $param->getName();
+
+        // Use provided parameter if available
+        if (array_key_exists($name, $providedParams)) {
+            $dependencies[] = $providedParams[$name];
+            continue;
+        }
+
+        $type = $param->getType();
+
+        // Handle anything that is not a named or built-in type.
+        if (! $type instanceof ReflectionNamedType || $type->isBuiltin()) {
+            $dependencies[] = $this->resolveNonTyped($param);
+            continue;
+        }
+
+        // Resolve typed dependency.
+        $className = $type->getName();
+
+        // If class is registered with the container, resolve it.
+        if ($this->has($className)) {
+            $dependencies[] = $this->resolve($className);
+            continue;
+        }
+
+        // If the class exists, resolve it.
+        if (class_exists($className)) {
+            $dependencies[] = $this->make($className);
+        }
+    }
+
+    return $dependencies;
+}
+```
+
+From `inc/Container/ServiceContainer.php:195`
+
+<Info>
+The container inspects constructor parameters and automatically injects registered services or creates new instances.
+</Info>
+
+## Service Providers
+
+Service providers are classes that register bindings with the container.
+
+### Base Service Provider
+
+Location: `inc/Core/ServiceProvider.php:23`
+
+```php
+abstract class ServiceProvider
+{
+    public function __construct(protected readonly Container $container)
+    {}
+
+    public function register(): void
+    {
+        // Default empty implementation - override if needed.
+    }
+}
+```
+
+### Content Service Provider Example
+
+Location: `inc/Content/ContentServiceProvider.php:19`
+
+```php
+final class ContentServiceProvider extends ServiceProvider implements Bootable
+{
+    public function register(): void
+    {
+        $this->container->singleton(Album::class);
+        $this->container->singleton(Artist::class);
+        $this->container->singleton(Genre::class);
+    }
+
+    public function boot(): void
+    {
+        $this->container->get(Album::class)->boot();
+        $this->container->get(Artist::class)->boot();
+        $this->container->get(Genre::class)->boot();
+    }
+}
+```
+
+<Note>
+Services are registered as **singletons**, meaning only one instance exists throughout the request lifecycle.
+</Note>
+
+## Application Class
+
+The `Application` class coordinates the registration and bootstrapping process.
+
+### Application Initialization
+
+Location: `inc/Core/Application.php:52`
+
+```php
+public function __construct(protected readonly Container $container)
+{
+    // Register default bindings and service providers.
+    $this->registerDefaultBindings();
+    $this->registerDefaultProviders();
+
+    // Allow third-party devs to register service providers.
+    if (static::NAMESPACE !== '') {
+        do_action(static::NAMESPACE . '/register', $this);
+    }
+}
+```
+
+### Registering Default Providers
+
+Location: `inc/Core/Application.php:75`
+
+```php
+protected function registerDefaultProviders(): void
+{
+    foreach (static::PROVIDERS as $provider) {
+        $this->register($provider);
+    }
+}
+```
+
+### Plugin Implementation
+
+Location: `inc/Plugin.php:24`
+
+```php
+final class Plugin extends Application
+{
+    protected const NAMESPACE = 'bifrost/music';
+
+    protected const PROVIDERS = [
+        ContentServiceProvider::class,
+        EditorServiceProvider::class
+    ];
+}
+```
+
+## Application Lifecycle
+
+The plugin follows a two-phase initialization process:
+
+### Phase 1: Initialization (`plugins_loaded` priority 999)
+
+Location: `inc/Lifecycle.php:27`
+
+```php
+public static function init(): void
+{
+    plugin();
+}
+```
+
+This calls the `plugin()` helper function:
+
+```php
+function plugin(): Application
+{
+    static $plugin;
+
+    if (! $plugin instanceof Plugin) {
+        $plugin = new Plugin(new ServiceContainer());
+    }
+
+    return $plugin;
+}
+```
+
+From `inc/functions-helpers.php:23`
+
+During this phase:
+1. Service container is created
+2. Service providers are registered
+3. Services are bound to the container
+
+### Phase 2: Booting (`plugins_loaded` priority 999999)
+
+Location: `inc/Lifecycle.php:36`
+
+```php
+public static function boot(): void
+{
+    plugin()->boot();
+}
+```
+
+The boot method iterates through all registered providers:
+
+```php
+public function boot(): void
+{
+    foreach ($this->serviceProviders as $provider) {
+        if ($provider instanceof Bootable) {
+            $provider->boot();
+        }
+    }
+
+    // Allow third-party devs access to hook in after booting.
+    if (static::NAMESPACE !== '') {
+        do_action(static::NAMESPACE . '/booted', $this);
+    }
+}
+```
+
+From `inc/Core/Application.php:113`
+
+During this phase:
+1. Services are retrieved from the container
+2. Services register WordPress hooks
+3. Plugin becomes fully functional
+
+## Bootable Contract
+
+Location: `inc/Contracts/Bootable.php`
+
+Services that need to perform actions during the boot phase implement the `Bootable` interface:
+
+```php
+interface Bootable
+{
+    public function boot(): void;
+}
+```
+
+Example from the `Artist` class:
+
+```php
+public function boot(): void
+{
+    // Register post types.
+    add_action('init', $this->register(...));
+
+    // Filter the "enter title here" text.
+    add_filter('enter_title_here', $this->enterTitleHere(...), 10, 2);
+
+    // Filter the bulk and post updated messages.
+    add_filter('bulk_post_updated_messages', $this->bulkPostUpdatedMessages(...), 5, 2);
+    add_filter('post_updated_messages', $this->postUpdatedMessages(...), 5);
+}
+```
+
+From `inc/Content/Artist.php:25`
+
+## Extensibility Hooks
+
+The architecture provides hooks for third-party developers:
+
+### Registration Hook
+
+```php
+do_action('bifrost/music/register', $this);
+```
+
+Fired after default providers are registered. Allows developers to register additional service providers:
+
+```php
+add_action('bifrost/music/register', function($app) {
+    $app->register(MyCustomServiceProvider::class);
+});
+```
+
+### Boot Hook
+
+```php
+do_action('bifrost/music/booted', $this);
+```
+
+Fired after all services have been booted. Useful for accessing fully initialized services:
+
+```php
+add_action('bifrost/music/booted', function($app) {
+    // All services are now available
+    $container = $app->container();
+});
+```
+
+## Benefits of This Architecture
+
+<CardGroup cols={2}>
+  <Card title="Separation of Concerns" icon="layer-group">
+    Each service handles one responsibility (post types, taxonomies, editor assets)
+  </Card>
+  <Card title="Testability" icon="vial">
+    Dependencies are injected, making it easy to mock services in unit tests
+  </Card>
+  <Card title="Maintainability" icon="wrench">
+    Changes to one service don't affect others due to loose coupling
+  </Card>
+  <Card title="Extensibility" icon="puzzle-piece">
+    Third-party developers can hook in and extend functionality without modifying core code
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Post Types" icon="file-code" href="./custom-post-types">
+    See how services register custom post types
+  </Card>
+  <Card title="Taxonomies" icon="tags" href="./taxonomies">
+    Learn about the Genre taxonomy service
+  </Card>
+</CardGroup>

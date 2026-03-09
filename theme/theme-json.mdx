@@ -1,0 +1,314 @@
+---
+title: "Theme.json Configuration"
+description: "Understanding theme.json v3 in Bifrost Noise"
+---
+
+## What is theme.json?
+
+`theme.json` is a configuration file that defines all global styles, settings, and design tokens for a WordPress theme. Bifrost Noise uses theme.json v3, the latest version.
+
+## File Location
+
+```plaintext
+bifrost-noise/
+└── theme.json    # Root of theme directory
+```
+
+## Structure
+
+```json
+{
+  "$schema": "https://raw.githubusercontent.com/WordPress/gutenberg/wp/trunk/schemas/json/theme.json",
+  "version": 3,
+  "settings": { /* Global and block-specific settings */ },
+  "styles": { /* Global and block-specific styles */ },
+  "customTemplates": { /* Custom template definitions */ },
+  "templateParts": { /* Template part definitions */ },
+  "patterns": [ /* Pattern categories */ ]
+}
+```
+
+## Key Sections
+
+### Settings
+
+Defines what options are available to users:
+
+```json
+"settings": {
+  "color": {
+    "palette": [
+      {
+        "name": "Base",
+        "slug": "base",
+        "color": "#ffffff"
+      },
+      {
+        "name": "Contrast",
+        "slug": "contrast",
+        "color": "#000000"
+      }
+    ],
+    "custom": true,
+    "customGradient": false
+  },
+  "typography": {
+    "fontFamilies": [
+      {
+        "name": "System",
+        "slug": "system",
+        "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto"
+      }
+    ],
+    "fontSizes": [
+      {
+        "name": "Small",
+        "slug": "small",
+        "size": "0.875rem"
+      }
+    ]
+  },
+  "spacing": {
+    "spacingSizes": [
+      {
+        "name": "Small",
+        "slug": "sm",
+        "size": "1rem"
+      }
+    ]
+  }
+}
+```
+
+### Color Palette
+
+Bifrost Noise defines a comprehensive color system:
+
+```json
+"palette": [
+  { "name": "Base", "slug": "base", "color": "#ffffff" },
+  { "name": "Contrast", "slug": "contrast", "color": "#000000" },
+  { "name": "Primary", "slug": "primary", "color": "#663ebc" },
+  { "name": "Secondary", "slug": "secondary", "color": "#b49cdc" },
+  { "name": "Accent", "slug": "accent", "color": "#0ea5e9" }
+]
+```
+
+<Info>
+Colors are automatically available as CSS custom properties: `var(--wp--preset--color--primary)`
+</Info>
+
+### Duotone Filters
+
+The theme includes 20+ duotone color combinations:
+
+```json
+"duotone": [
+  {
+    "name": "Grayscale",
+    "slug": "grayscale",
+    "colors": ["#000000", "#ffffff"]
+  },
+  {
+    "name": "Purple",
+    "slug": "purple",
+    "colors": ["#3b0764", "#faf5ff"]
+  }
+]
+```
+
+### Typography
+
+```json
+"typography": {
+  "fontFamilies": [
+    {
+      "name": "System",
+      "slug": "system",
+      "fontFamily": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif"
+    }
+  ],
+  "fontSizes": [
+    { "name": "Small", "slug": "small", "size": "0.875rem" },
+    { "name": "Medium", "slug": "medium", "size": "1rem" },
+    { "name": "Large", "slug": "large", "size": "1.25rem" },
+    { "name": "Extra Large", "slug": "x-large", "size": "1.5rem" },
+    { "name": "2X Large", "slug": "2-x-large", "size": "2rem" }
+  ]
+}
+```
+
+### Spacing Scale
+
+Consistent spacing presets:
+
+```json
+"spacing": {
+  "spacingSizes": [
+    { "name": "2X Small", "slug": "2-xs", "size": "0.25rem" },
+    { "name": "X Small", "slug": "xs", "size": "0.5rem" },
+    { "name": "Small", "slug": "sm", "size": "0.75rem" },
+    { "name": "Medium", "slug": "md", "size": "1rem" },
+    { "name": "Large", "slug": "lg", "size": "1.5rem" },
+    { "name": "X Large", "slug": "xl", "size": "2rem" },
+    { "name": "2X Large", "slug": "2-xl", "size": "3rem" },
+    { "name": "3X Large", "slug": "3-xl", "size": "4rem" }
+  ]
+}
+```
+
+### Border Radius
+
+```json
+"border": {
+  "radiusSizes": [
+    { "name": "XS", "slug": "xs", "size": "0.125rem" },
+    { "name": "Small", "slug": "sm", "size": "0.25rem" },
+    { "name": "Medium", "slug": "md", "size": "0.375rem" },
+    { "name": "Large", "slug": "lg", "size": "0.5rem" },
+    { "name": "Full", "slug": "full", "size": "9999em" }
+  ]
+}
+```
+
+## Block-Specific Settings
+
+Configure settings per block:
+
+```json
+"blocks": {
+  "core/image": {
+    "lightbox": {
+      "allowEditing": true,
+      "enabled": true
+    }
+  },
+  "core/button": {
+    "border": {
+      "radius": true
+    },
+    "color": {
+      "background": true,
+      "text": true
+    }
+  }
+}
+```
+
+## Styles
+
+Apply default styles globally or per block:
+
+```json
+"styles": {
+  "color": {
+    "background": "var(--wp--preset--color--base)",
+    "text": "var(--wp--preset--color--contrast)"
+  },
+  "typography": {
+    "fontFamily": "var(--wp--preset--font-family--system)",
+    "fontSize": "var(--wp--preset--font-size--medium)",
+    "lineHeight": "1.6"
+  },
+  "spacing": {
+    "padding": {
+      "top": "var(--wp--preset--spacing--md)",
+      "right": "var(--wp--preset--spacing--md)",
+      "bottom": "var(--wp--preset--spacing--md)",
+      "left": "var(--wp--preset--spacing--md)"
+    }
+  },
+  "blocks": {
+    "core/heading": {
+      "typography": {
+        "fontWeight": "700",
+        "lineHeight": "1.2"
+      }
+    }
+  }
+}
+```
+
+## Custom Templates
+
+Define which templates appear in the Site Editor:
+
+```json
+"customTemplates": [
+  {
+    "name": "blank",
+    "title": "Blank",
+    "postTypes": ["page", "post"]
+  }
+]
+```
+
+## Template Parts
+
+Define reusable template parts:
+
+```json
+"templateParts": [
+  {
+    "name": "header",
+    "title": "Header",
+    "area": "header"
+  },
+  {
+    "name": "footer",
+    "title": "Footer",
+    "area": "footer"
+  }
+]
+```
+
+## CSS Custom Properties
+
+All theme.json values become CSS custom properties:
+
+```css
+/* Automatically generated */
+:root {
+  --wp--preset--color--primary: #663ebc;
+  --wp--preset--font-size--medium: 1rem;
+  --wp--preset--spacing--md: 1rem;
+}
+```
+
+Use in custom CSS:
+
+```css
+.my-element {
+  color: var(--wp--preset--color--primary);
+  font-size: var(--wp--preset--font-size--large);
+  padding: var(--wp--preset--spacing--lg);
+}
+```
+
+## Benefits
+
+<CardGroup cols={2}>
+  <Card title="Type Safety" icon="shield">
+    JSON schema validation ensures valid configuration
+  </Card>
+  <Card title="Performance" icon="gauge-high">
+    Styles are compiled and cached by WordPress
+  </Card>
+  <Card title="User Control" icon="sliders">
+    Users can customize through the Site Editor
+  </Card>
+  <Card title="Consistency" icon="check">
+    Design tokens ensure consistent styling
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Full Site Editing" icon="wand-magic-sparkles" href="/theme/full-site-editing">
+    Learn about FSE features
+  </Card>
+  <Card title="Patterns" icon="grid" href="/theme/patterns">
+    Explore block patterns
+  </Card>
+</CardGroup>

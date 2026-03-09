@@ -1,0 +1,403 @@
+---
+title: REST API
+description: REST API extensions and custom fields added by the Bifrost Music plugin
+---
+
+The Bifrost Music plugin extends the WordPress REST API with custom fields and endpoints for the music content types.
+
+## Overview
+
+All custom post types and taxonomies are REST API-enabled through the `show_in_rest` parameter:
+
+- **Artists**: `/wp-json/wp/v2/music_artist`
+- **Albums**: `/wp-json/wp/v2/music_album`
+- **Genres**: `/wp-json/wp/v2/music_genre`
+
+## Album Parent Field
+
+Since the `music_album` post type is non-hierarchical but needs to maintain parent-child relationships with artists, a custom `parent` field is registered with the REST API.
+
+### Registration
+
+Registered in `inc/Content/Album.php:152`
+
+```php
+private function restRegister(): void
+{
+    register_rest_field(Definitions::POST_TYPE_ALBUM, 'parent', [
+        'get_callback'    => fn($post) => (int) $post['parent'],
+        'update_callback' => fn($value, $post) => wp_update_post([
+            'ID'          => $post->ID,
+            'post_parent' => (int) $value
+        ]),
+        'schema' => [
+            'description' => __('Parent Artist ID', 'bifrost-music'),
+            'type'        => 'integer',
+            'context'     => ['view', 'edit']
+        ]
+    ]);
+}
+```
+
+### Field Schema
+
+<ResponseField name="parent" type="integer">
+  The ID of the parent artist for this album
+</ResponseField>
+
+<ParamField path="description" type="string" default="Parent Artist ID">
+  Human-readable description of the field
+</ParamField>
+
+<ParamField path="type" type="string" default="integer">
+  Data type validation (must be an integer)
+</ParamField>
+
+<ParamField path="context" type="array" default="['view', 'edit']">
+  Available in both view and edit contexts
+</ParamField>
+
+### Get Callback
+
+Retrieves the parent artist ID from the post object:
+
+```php
+'get_callback' => fn($post) => (int) $post['parent']
+```
+
+**Returns**: Integer ID of the parent artist, or `0` if no parent is set.
+
+### Update Callback
+
+Updates the parent artist relationship:
+
+```php
+'update_callback' => fn($value, $post) => wp_update_post([
+    'ID'          => $post->ID,
+    'post_parent' => (int) $value
+])
+```
+
+**Parameters**:
+- `$value` (int): The new parent artist ID
+- `$post` (WP_Post): The album post object
+
+**Returns**: The result of `wp_update_post()`
+
+## REST API Endpoints
+
+### Artists Endpoint
+
+<Accordion title="GET /wp-json/wp/v2/music_artist">
+
+Retrieve a list of all artists.
+
+**Query Parameters**:
+
+<ParamField query="context" type="string" default="view">
+  Scope under which the request is made. Options: `view`, `embed`, `edit`
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Current page of the collection
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="10">
+  Maximum number of items per page
+</ParamField>
+
+<ParamField query="search" type="string">
+  Search artists by title
+</ParamField>
+
+<ParamField query="status" type="string" default="publish">
+  Limit to artists with specific status
+</ParamField>
+
+**Example Request**:
+
+```bash
+curl https://example.com/wp-json/wp/v2/music_artist?per_page=5
+```
+
+**Example Response**:
+
+```json
+[
+  {
+    "id": 123,
+    "date": "2026-03-09T10:00:00",
+    "slug": "the-beatles",
+    "status": "publish",
+    "type": "music_artist",
+    "link": "https://example.com/artists/the-beatles",
+    "title": {
+      "rendered": "The Beatles"
+    },
+    "content": {
+      "rendered": "<p>Artist biography...</p>"
+    },
+    "featured_media": 456,
+    "_links": { ... }
+  }
+]
+```
+
+</Accordion>
+
+<Accordion title="GET /wp-json/wp/v2/music_artist/{id}">
+
+Retrieve a specific artist by ID.
+
+**Path Parameters**:
+
+<ParamField path="id" type="integer" required>
+  Unique identifier for the artist
+</ParamField>
+
+**Example Request**:
+
+```bash
+curl https://example.com/wp-json/wp/v2/music_artist/123
+```
+
+</Accordion>
+
+<Accordion title="POST /wp-json/wp/v2/music_artist">
+
+Create a new artist.
+
+**Required Capabilities**: `create_music_artists`
+
+**Body Parameters**:
+
+<ParamField body="title" type="string" required>
+  The artist name
+</ParamField>
+
+<ParamField body="content" type="string">
+  The artist biography (HTML content)
+</ParamField>
+
+<ParamField body="status" type="string" default="draft">
+  The artist status. Options: `publish`, `draft`, `pending`
+</ParamField>
+
+<ParamField body="featured_media" type="integer">
+  The ID of the featured image (artist photo)
+</ParamField>
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.com/wp-json/wp/v2/music_artist \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Pink Floyd",
+    "content": "Progressive rock band...",
+    "status": "publish"
+  }'
+```
+
+</Accordion>
+
+### Albums Endpoint
+
+<Accordion title="GET /wp-json/wp/v2/music_album">
+
+Retrieve a list of all albums.
+
+**Query Parameters**: Same as Artists endpoint, plus:
+
+<ParamField query="parent" type="integer">
+  Filter albums by parent artist ID
+</ParamField>
+
+<ParamField query="music_genre" type="array">
+  Filter albums by genre term ID(s)
+</ParamField>
+
+**Example Request**:
+
+```bash
+# Get all albums by artist ID 123
+curl https://example.com/wp-json/wp/v2/music_album?parent=123
+
+# Get all rock albums
+curl https://example.com/wp-json/wp/v2/music_album?music_genre=5
+```
+
+**Example Response**:
+
+```json
+[
+  {
+    "id": 456,
+    "date": "2026-03-09T11:00:00",
+    "slug": "abbey-road",
+    "status": "publish",
+    "type": "music_album",
+    "link": "https://example.com/albums/abbey-road",
+    "title": {
+      "rendered": "Abbey Road"
+    },
+    "parent": 123,
+    "featured_media": 789,
+    "music_genre": [5, 12],
+    "_links": { ... }
+  }
+]
+```
+
+</Accordion>
+
+<Accordion title="POST /wp-json/wp/v2/music_album">
+
+Create a new album.
+
+**Required Capabilities**: `create_music_albums`
+
+**Body Parameters**: Same as Artists, plus:
+
+<ParamField body="parent" type="integer">
+  The parent artist ID
+</ParamField>
+
+<ParamField body="music_genre" type="array">
+  Array of genre term IDs to assign
+</ParamField>
+
+**Example Request**:
+
+```bash
+curl -X POST https://example.com/wp-json/wp/v2/music_album \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "The Dark Side of the Moon",
+    "parent": 124,
+    "music_genre": [5, 12],
+    "status": "publish"
+  }'
+```
+
+</Accordion>
+
+<Accordion title="PUT/PATCH /wp-json/wp/v2/music_album/{id}">
+
+Update an existing album, including its parent artist relationship.
+
+**Required Capabilities**: `edit_music_album`
+
+**Example Request**:
+
+```bash
+# Change the parent artist for an album
+curl -X PATCH https://example.com/wp-json/wp/v2/music_album/456 \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"parent": 125}'
+```
+
+</Accordion>
+
+### Genres Endpoint
+
+<Accordion title="GET /wp-json/wp/v2/music_genre">
+
+Retrieve a list of all genres.
+
+**Query Parameters**:
+
+<ParamField query="hide_empty" type="boolean" default="false">
+  Whether to hide genres with no assigned albums
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="10">
+  Maximum number of items per page
+</ParamField>
+
+<ParamField query="search" type="string">
+  Search genres by name
+</ParamField>
+
+**Example Request**:
+
+```bash
+curl https://example.com/wp-json/wp/v2/music_genre
+```
+
+**Example Response**:
+
+```json
+[
+  {
+    "id": 5,
+    "count": 42,
+    "description": "",
+    "link": "https://example.com/genres/rock",
+    "name": "Rock",
+    "slug": "rock",
+    "taxonomy": "music_genre",
+    "_links": { ... }
+  }
+]
+```
+
+</Accordion>
+
+## Authentication
+
+All write operations (POST, PUT, PATCH, DELETE) require authentication. WordPress supports several authentication methods:
+
+<CardGroup cols={2}>
+  <Card title="Application Passwords" icon="key">
+    Built-in WordPress authentication method (WP 5.6+)
+  </Card>
+  <Card title="OAuth" icon="shield">
+    OAuth 1.0a or 2.0 via plugins
+  </Card>
+  <Card title="JWT" icon="lock">
+    JSON Web Tokens via third-party plugins
+  </Card>
+  <Card title="Cookie" icon="cookie">
+    WordPress cookie authentication (same-site only)
+  </Card>
+</CardGroup>
+
+## CORS Considerations
+
+If accessing the API from a different domain, you may need to enable CORS. Add this to your theme's `functions.php` or a custom plugin:
+
+```php
+add_action('rest_api_init', function() {
+    remove_filter('rest_pre_serve_request', 'rest_send_cors_headers');
+    add_filter('rest_pre_serve_request', function($value) {
+        header('Access-Control-Allow-Origin: https://your-frontend-domain.com');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+        header('Access-Control-Allow-Credentials: true');
+        return $value;
+    });
+}, 15);
+```
+
+## Error Responses
+
+The API returns standard WordPress REST API error responses:
+
+```json
+{
+  "code": "rest_forbidden",
+  "message": "Sorry, you are not allowed to create music artists.",
+  "data": {
+    "status": 403
+  }
+}
+```
+
+Common error codes:
+- `rest_forbidden` (403): Insufficient permissions
+- `rest_invalid_param` (400): Invalid parameter value
+- `rest_post_invalid_id` (404): Post not found
+- `rest_cannot_edit` (401): Authentication required

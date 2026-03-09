@@ -1,0 +1,407 @@
+---
+title: Block Editor Integration
+description: React-based parent artist selector for the WordPress block editor
+---
+
+The plugin extends the WordPress block editor (Gutenberg) with a custom **Album Parent Selector** component that allows editors to assign an artist to an album directly from the document sidebar.
+
+## Overview
+
+The parent selector is implemented as a React component using WordPress's `@wordpress/plugins` API. It appears in the document settings panel when editing an Album post.
+
+## Component Implementation
+
+Location: `src/editor.js:10`
+
+### Complete Source Code
+
+```javascript
+import { registerPlugin } from '@wordpress/plugins';
+import { PluginDocumentSettingPanel } from '@wordpress/editor';
+import { SelectControl, Spinner } from '@wordpress/components';
+import { useSelect, useDispatch } from '@wordpress/data';
+import { store as editorStore } from '@wordpress/editor';
+import { store as coreStore } from '@wordpress/core-data';
+import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
+
+const AlbumParentSelector = () => {
+	const { postType, currentParent } = useSelect((select) => ({
+		postType: select(editorStore).getCurrentPostType(),
+		currentParent: select(editorStore).getEditedPostAttribute('parent'),
+	}), []);
+
+	const { artists, isResolving } = useSelect((select) => {
+		if (postType !== 'music_album') {
+			return { artists: null, isResolving: false };
+		}
+
+		return {
+			artists: select(coreStore).getEntityRecords('postType', 'music_artist', {
+				per_page: -1,
+				orderby: 'title',
+				order: 'asc',
+				status: 'publish,draft',
+			}),
+			isResolving: select(coreStore).isResolving('getEntityRecords', [
+				'postType',
+				'music_artist',
+				{ per_page: -1, orderby: 'title', order: 'asc', status: 'publish,draft' },
+			]),
+		};
+	}, [postType]);
+
+	const { editPost } = useDispatch(editorStore);
+
+	const options = useMemo(() => {
+		if (!artists) return [];
+
+		return [
+			{ label: __('— Select Artist —', 'bifrost-music'), value: 0 },
+			...artists.map((artist) => ({
+				label: artist.title.rendered,
+				value: artist.id,
+			})),
+		];
+	}, [artists]);
+
+	if (postType !== 'music_album') {
+		return null;
+	}
+
+	if (isResolving) {
+		return (
+			<PluginDocumentSettingPanel
+				name="album-parent-artist"
+				title={__('Artist', 'bifrost-music')}
+			>
+				<Spinner />
+			</PluginDocumentSettingPanel>
+		);
+	}
+
+	return (
+		<PluginDocumentSettingPanel
+			name="album-parent-artist"
+			title={__('Artist', 'bifrost-music')}
+		>
+			<SelectControl
+				__next40pxDefaultSize
+				__nextHasNoMarginBottom
+				value={currentParent || 0}
+				options={options}
+				onChange={(value) => editPost({ parent: parseInt(value, 10) })}
+			/>
+		</PluginDocumentSettingPanel>
+	);
+};
+
+registerPlugin('album-parent-selector', {
+	render: AlbumParentSelector,
+});
+```
+
+## Component Breakdown
+
+### Data Selection with `useSelect`
+
+The component uses two `useSelect` hooks to retrieve data from WordPress stores.
+
+#### Current Post Data
+
+Location: `src/editor.js:11`
+
+```javascript
+const { postType, currentParent } = useSelect((select) => ({
+    postType: select(editorStore).getCurrentPostType(),
+    currentParent: select(editorStore).getEditedPostAttribute('parent'),
+}), []);
+```
+
+This retrieves:
+- **postType:** The current post type being edited (e.g., `'music_album'`)
+- **currentParent:** The currently selected parent artist ID
+
+#### Artist Posts Data
+
+Location: `src/editor.js:16`
+
+```javascript
+const { artists, isResolving } = useSelect((select) => {
+    if (postType !== 'music_album') {
+        return { artists: null, isResolving: false };
+    }
+
+    return {
+        artists: select(coreStore).getEntityRecords('postType', 'music_artist', {
+            per_page: -1,
+            orderby: 'title',
+            order: 'asc',
+            status: 'publish,draft',
+        }),
+        isResolving: select(coreStore).isResolving('getEntityRecords', [
+            'postType',
+            'music_artist',
+            { per_page: -1, orderby: 'title', order: 'asc', status: 'publish,draft' },
+        ]),
+    };
+}, [postType]);
+```
+
+This:
+1. Early returns if not editing an album
+2. Fetches all artist posts via `getEntityRecords`
+3. Includes both published and draft artists
+4. Sorts alphabetically by title
+5. Tracks loading state with `isResolving`
+
+<Info>
+The `per_page: -1` parameter fetches **all** artists without pagination.
+</Info>
+
+### Updating Post Data with `useDispatch`
+
+Location: `src/editor.js:36`
+
+```javascript
+const { editPost } = useDispatch(editorStore);
+```
+
+The `editPost` function is used to update the post's parent attribute when the user makes a selection.
+
+### Memoized Options
+
+Location: `src/editor.js:38`
+
+```javascript
+const options = useMemo(() => {
+    if (!artists) return [];
+
+    return [
+        { label: __('— Select Artist —', 'bifrost-music'), value: 0 },
+        ...artists.map((artist) => ({
+            label: artist.title.rendered,
+            value: artist.id,
+        })),
+    ];
+}, [artists]);
+```
+
+This creates the dropdown options array:
+- First option is "— Select Artist —" with value `0` (no parent)
+- Remaining options map each artist to `{ label, value }` format
+- Uses `useMemo` to avoid recreating the array on every render
+
+<Tip>
+The `title.rendered` property contains the artist title with HTML entities decoded and rendered.
+</Tip>
+
+### Conditional Rendering
+
+#### Only Show for Albums
+
+Location: `src/editor.js:50`
+
+```javascript
+if (postType !== 'music_album') {
+    return null;
+}
+```
+
+The component only renders when editing an Album post.
+
+#### Loading State
+
+Location: `src/editor.js:54`
+
+```javascript
+if (isResolving) {
+    return (
+        <PluginDocumentSettingPanel
+            name="album-parent-artist"
+            title={__('Artist', 'bifrost-music')}
+        >
+            <Spinner />
+        </PluginDocumentSettingPanel>
+    );
+}
+```
+
+While artists are loading, a spinner is displayed.
+
+### The Select Control
+
+Location: `src/editor.js:65`
+
+```javascript
+return (
+    <PluginDocumentSettingPanel
+        name="album-parent-artist"
+        title={__('Artist', 'bifrost-music')}
+    >
+        <SelectControl
+            __next40pxDefaultSize
+            __nextHasNoMarginBottom
+            value={currentParent || 0}
+            options={options}
+            onChange={(value) => editPost({ parent: parseInt(value, 10) })}
+        />
+    </PluginDocumentSettingPanel>
+);
+```
+
+Key props:
+- **value:** The current parent ID (defaults to `0` if none)
+- **options:** The memoized array of artists
+- **onChange:** Updates the post's parent when selection changes
+
+<Note>
+The `__next40pxDefaultSize` and `__nextHasNoMarginBottom` props are WordPress design system flags for styling consistency.
+</Note>
+
+### Plugin Registration
+
+Location: `src/editor.js:81`
+
+```javascript
+registerPlugin('album-parent-selector', {
+    render: AlbumParentSelector,
+});
+```
+
+This registers the component as a WordPress editor plugin with the ID `'album-parent-selector'`.
+
+## Asset Enqueuing
+
+The compiled JavaScript is enqueued via the `EditorAssets` service.
+
+Location: `inc/Editor/EditorAssets.php:36`
+
+```php
+private function enqueue(): void
+{
+    $script_asset = include PLUGIN_DIR . '/build/editor.asset.php';
+
+    wp_enqueue_script(
+        'bifrost-music-editor',
+        plugin_dir_url(PLUGIN_FILE) . 'build/editor.js',
+        $script_asset['dependencies'],
+        $script_asset['version'],
+        true
+    );
+
+    // Set translations for editor scripts.
+    wp_set_script_translations('bifrost-music-editor', 'bifrost-music');
+}
+```
+
+<Info>
+The `editor.asset.php` file is auto-generated by `@wordpress/scripts` and contains dependency and version information.
+</Info>
+
+### Translation Support
+
+Location: `inc/Editor/EditorAssets.php:48`
+
+```php
+wp_set_script_translations('bifrost-music-editor', 'bifrost-music');
+```
+
+This enables JavaScript internationalization using the `__()` function in the React component.
+
+## REST API Integration
+
+The component works because the Album post type registers a custom `parent` field with the REST API:
+
+Location: `inc/Content/Album.php:150`
+
+```php
+private function restRegister(): void
+{
+    register_rest_field(Definitions::POST_TYPE_ALBUM, 'parent', [
+        'get_callback'    => fn($post) => (int) $post['parent'],
+        'update_callback' => fn($value, $post) => wp_update_post([
+            'ID'          => $post->ID,
+            'post_parent' => (int) $value
+        ]),
+        'schema' => [
+            'description' => __('Parent Artist ID', 'bifrost-music'),
+            'type'        => 'integer',
+            'context'     => ['view', 'edit']
+        ]
+    ]);
+}
+```
+
+Without this registration, the non-hierarchical Album post type wouldn't expose the `parent` field in REST responses.
+
+## Build Process
+
+The JavaScript is built using `@wordpress/scripts`:
+
+```bash
+npm run build
+```
+
+This:
+1. Compiles JSX to JavaScript
+2. Bundles dependencies
+3. Generates `build/editor.js` and `build/editor.asset.php`
+
+## User Experience Flow
+
+1. **Editor opens** an Album post
+2. **Component checks** if post type is `music_album`
+3. **Component fetches** all Artist posts via REST API
+4. **Loading spinner** appears while data loads
+5. **Dropdown appears** with all artists sorted alphabetically
+6. **User selects** an artist from the dropdown
+7. **onChange fires**, calling `editPost({ parent: artistId })`
+8. **WordPress updates** the post's parent via REST API
+9. **Component re-renders** with new parent selected
+
+## Best Practices Demonstrated
+
+<CardGroup cols={2}>
+  <Card title="Performance Optimization" icon="gauge-high">
+    Uses `useMemo` to avoid recreating options array on every render
+  </Card>
+  <Card title="Loading States" icon="spinner">
+    Shows a spinner while data is being fetched
+  </Card>
+  <Card title="Conditional Rendering" icon="code-branch">
+    Only renders for the correct post type to avoid unnecessary API calls
+  </Card>
+  <Card title="Internationalization" icon="language">
+    All user-facing strings use `__()` for translation support
+  </Card>
+</CardGroup>
+
+## Extending the Component
+
+Developers can extend this pattern for other relationships:
+
+```javascript
+// Example: Add a "Record Label" selector
+const AlbumLabelSelector = () => {
+    const { postType, currentLabel } = useSelect((select) => ({
+        postType: select(editorStore).getCurrentPostType(),
+        currentLabel: select(editorStore).getEditedPostAttribute('meta')?.record_label,
+    }), []);
+
+    const { editPost } = useDispatch(editorStore);
+
+    // ... similar implementation
+};
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Post Types" icon="file-code" href="./custom-post-types">
+    Learn how the Album REST API integration works
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="./architecture">
+    Understand how editor assets are loaded via service providers
+  </Card>
+</CardGroup>

@@ -1,0 +1,339 @@
+---
+title: "Block Templates"
+description: "Understanding block templates in Bifrost Noise"
+---
+
+## What are Block Templates?
+
+Block templates are HTML files that define the structure and layout of different page types in your WordPress site. In Full Site Editing themes, templates are built entirely with blocks.
+
+## Template Hierarchy
+
+Bifrost Noise includes the following templates:
+
+```plaintext
+templates/
+├── 404.html                      # 404 error page
+├── index.html                    # Fallback template
+├── home.html                     # Blog homepage
+├── front-page.html               # Static homepage
+├── single-post.html              # Single blog post
+├── single-music_artist.html      # Single artist page
+├── single-music_album.html       # Single album page
+├── archive-music_artist.html     # Artist archive
+├── archive-music_album.html      # Album archive
+├── taxonomy-music_genre.html     # Genre taxonomy
+├── page.html                     # Static page
+├── search.html                   # Search results
+├── author.html                   # Author archive
+├── category.html                 # Category archive
+└── tag.html                      # Tag archive
+```
+
+## Template Structure
+
+All templates follow a similar structure:
+
+```html index.html
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main class="wp-block-group">
+	<!-- Template content goes here -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->
+```
+
+<Info>
+Every template includes the header and footer template parts, ensuring consistent site-wide navigation and branding.
+</Info>
+
+## Common Templates
+
+### Index (Fallback)
+
+The most basic template, used when no more specific template is available:
+
+```html index.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:query -->
+	<div class="wp-block-query">
+		<!-- wp:post-template -->
+			<!-- wp:post-title /-->
+			<!-- wp:post-excerpt /-->
+		<!-- /wp:post-template -->
+		<!-- wp:query-pagination /-->
+	</div>
+	<!-- /wp:query -->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+### Single Post
+
+Template for displaying individual blog posts:
+
+```html single-post.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:post-featured-image /-->
+	<!-- wp:post-title /-->
+	<!-- wp:pattern {"slug":"bifrost-noise/post-byline-default"} /-->
+	<!-- wp:post-content /-->
+	<!-- wp:post-terms {"term":"category"} /-->
+	<!-- wp:post-terms {"term":"post_tag"} /-->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+### Custom Post Type: Artist
+
+Dedicated template for music artists:
+
+```html single-music_artist.html lines
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:post-featured-image {"aspectRatio":"1"} /-->
+	
+	<!-- wp:post-title {"level":1} /-->
+	
+	<!-- wp:post-content {"layout":{"type":"constrained"}} /-->
+	
+	<!-- wp:heading -->
+	<h2>Albums</h2>
+	<!-- /wp:heading -->
+	
+	<!-- wp:query {
+		"query": {
+			"postType": "music_album",
+			"inherit": false,
+			"parents": [0]
+		}
+	} -->
+	<div class="wp-block-query">
+		<!-- wp:post-template {"layout":{"type":"grid","columnCount":3}} -->
+			<!-- wp:post-featured-image {"isLink":true,"aspectRatio":"1"} /-->
+			<!-- wp:post-title {"isLink":true} /-->
+		<!-- /wp:post-template -->
+	</div>
+	<!-- /wp:query -->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+<Note>
+The artist template includes a query block that displays all albums by this artist using the parent-child relationship.
+</Note>
+
+### Custom Post Type: Album
+
+Template for music albums:
+
+```html single-music_album.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:post-featured-image {"aspectRatio":"1"} /-->
+	
+	<!-- wp:post-title /-->
+	
+	<!-- wp:group {"layout":{"type":"flex"}} -->
+	<div class="wp-block-group">
+		<!-- wp:paragraph -->
+		<p><strong>Artist:</strong></p>
+		<!-- /wp:paragraph -->
+		<!-- Link to parent artist -->
+	</div>
+	<!-- /wp:group -->
+	
+	<!-- wp:post-terms {"term":"music_genre"} /-->
+	
+	<!-- wp:post-content /-->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+### Archive Templates
+
+Template for listing multiple posts:
+
+```html archive-music_artist.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:query-title {"type":"archive"} /-->
+	
+	<!-- wp:query -->
+	<div class="wp-block-query">
+		<!-- wp:post-template {"layout":{"type":"grid","columnCount":4}} -->
+			<!-- wp:post-featured-image {"isLink":true,"aspectRatio":"1"} /-->
+			<!-- wp:post-title {"isLink":true} /-->
+			<!-- wp:post-excerpt /-->
+		<!-- /wp:post-template -->
+		
+		<!-- wp:query-pagination -->
+			<!-- wp:query-pagination-previous /-->
+			<!-- wp:query-pagination-numbers /-->
+			<!-- wp:query-pagination-next /-->
+		<!-- /wp:query-pagination -->
+	</div>
+	<!-- /wp:query -->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+### Taxonomy Archive
+
+Template for genre taxonomy pages:
+
+```html taxonomy-music_genre.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<main class="wp-block-group">
+	<!-- wp:query-title {"type":"archive"} /-->
+	<!-- wp:term-description /-->
+	
+	<!-- wp:query {"query":{"postType":"music_album","inherit":true}} -->
+	<div class="wp-block-query">
+		<!-- wp:post-template {"layout":{"type":"grid","columnCount":3}} -->
+			<!-- wp:post-featured-image /-->
+			<!-- wp:post-title /-->
+		<!-- /wp:post-template -->
+		<!-- wp:query-pagination /-->
+	</div>
+	<!-- /wp:query -->
+</main>
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+## Template Parts
+
+Reusable components that can be included in templates:
+
+### Header
+
+```html parts/header.html
+<!-- wp:group {"tagName":"header","align":"full"} -->
+<header class="wp-block-group alignfull">
+	<!-- wp:group {"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group">
+		<!-- wp:site-logo /-->
+		<!-- wp:site-title /-->
+		<!-- wp:navigation /-->
+	</div>
+	<!-- /wp:group -->
+</header>
+<!-- /wp:group -->
+```
+
+### Footer
+
+```html parts/footer.html
+<!-- wp:group {"tagName":"footer","align":"full"} -->
+<footer class="wp-block-group alignfull">
+	<!-- wp:group {"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group">
+		<!-- wp:paragraph -->
+		<p>© 2026 WordPress Developer Showcase</p>
+		<!-- /wp:paragraph -->
+	</div>
+	<!-- /wp:group -->
+</footer>
+<!-- /wp:group -->
+```
+
+## Editing Templates
+
+Users can edit templates through the Site Editor:
+
+<Steps>
+  <Step title="Open Site Editor">
+    Navigate to **Appearance → Editor**
+  </Step>
+  <Step title="Select Templates">
+    Click **Templates** in the sidebar
+  </Step>
+  <Step title="Choose Template">
+    Select the template you want to edit
+  </Step>
+  <Step title="Make Changes">
+    Add, remove, or modify blocks using the editor
+  </Step>
+  <Step title="Save">
+    Click **Save** - changes override theme defaults
+  </Step>
+</Steps>
+
+<Warning>
+Customizations are stored in the database. To reset to theme defaults, use the "Clear customizations" option in the Site Editor.
+</Warning>
+
+## Creating Custom Templates
+
+Add new templates to the `/templates/` directory:
+
+1. Create an HTML file with block markup
+2. WordPress automatically detects it
+3. Users can select it when creating pages
+
+Example custom template:
+
+```html templates/page-full-width.html
+<!-- wp:template-part {"slug":"header"} /-->
+
+<!-- wp:group {"align":"full","layout":{"type":"constrained","contentSize":"100%"}} -->
+<main class="wp-block-group alignfull">
+	<!-- wp:post-content {"align":"full"} /-->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer"} /-->
+```
+
+Register it in `theme.json`:
+
+```json
+"customTemplates": [
+  {
+    "name": "page-full-width",
+    "title": "Full Width Page",
+    "postTypes": ["page"]
+  }
+]
+```
+
+## Template Hierarchy
+
+WordPress selects templates in this order:
+
+1. Most specific (e.g., `single-music_artist.html`)
+2. Generic single (e.g., `single.html`)
+3. Fallback (`index.html`)
+
+For a music artist post, WordPress checks:
+1. `single-music_artist.html` ✅
+2. `single.html`
+3. `index.html`
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Patterns" icon="grid" href="/theme/patterns">
+    Learn about reusable block patterns
+  </Card>
+  <Card title="Theme API" icon="code" href="/api/theme/functions">
+    Explore theme functions and hooks
+  </Card>
+</CardGroup>

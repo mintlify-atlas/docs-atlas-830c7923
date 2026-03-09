@@ -1,0 +1,162 @@
+---
+title: Getting Started
+description: Learn how to start contributing to the WordPress Developer Showcase project
+---
+
+Welcome to the WordPress Developer Showcase project! This guide will help you get set up and make your first contribution.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **WordPress 6.9 or higher**
+- **PHP 8.0+** (project uses PHP 8.1+)
+- **Node.js 18+** for development
+- **npm or yarn** package manager
+- **Git** for version control
+- **Composer** for PHP dependency management
+
+## Fork and Clone the Repository
+
+<Steps>
+  <Step title="Fork the repository">
+    Visit the [WordPress Developer Showcase repository](#) and click the **Fork** button in the top-right corner to create your own copy.
+  </Step>
+
+  <Step title="Clone your fork">
+    Clone your forked repository to your local machine:
+
+    ```bash
+    git clone https://github.com/YOUR-USERNAME/wordpress-developer-showcase.git
+    cd wordpress-developer-showcase
+    ```
+  </Step>
+
+  <Step title="Add upstream remote">
+    Add the original repository as an upstream remote to keep your fork in sync:
+
+    ```bash
+    git remote add upstream https://github.com/ORIGINAL-OWNER/wordpress-developer-showcase.git
+    git fetch upstream
+    ```
+  </Step>
+</Steps>
+
+## Repository Structure
+
+The root of this repository represents the `wp-content` directory:
+
+```
+├── themes/
+│   └── bifrost-noise/        # Main theme
+├── plugins/
+│   └── bifrost-music/        # Music plugin
+├── CONTRIBUTING.md
+└── README.md
+```
+
+<Note>
+  This structure reflects a WordPress installation's content directory, making it easy to understand where your changes will live in production.
+</Note>
+
+## Set Up Development Environment
+
+<Steps>
+  <Step title="Install PHP dependencies">
+    If you're working on a theme or plugin with a `composer.json` file:
+
+    ```bash
+    # For the theme
+    cd themes/bifrost-noise
+    composer dev
+
+    # Or for the plugin
+    cd plugins/bifrost-music
+    composer dev
+    ```
+  </Step>
+
+  <Step title="Install Node dependencies">
+    If working with JavaScript/CSS build tools:
+
+    ```bash
+    # In the theme or plugin directory
+    npm install
+    ```
+  </Step>
+
+  <Step title="Set up WordPress">
+    You'll need a local WordPress installation. The repository contents should be placed in or symlinked to your WordPress `wp-content` directory.
+  </Step>
+</Steps>
+
+## Understanding the Branches
+
+This project uses a **simplified Git Flow** approach with two main branches:
+
+| Branch | Purpose | Deploys To |
+|--------|---------|------------|
+| `trunk` | Production-ready code (primary branch) | **Production** |
+| `staging` | Integration branch for testing | **Staging Environment** |
+
+<Warning>
+  **IMPORTANT:** `staging` is NEVER merged into `trunk`. The staging branch is only used for testing. When changes are approved, the original working branch is merged directly into `trunk`.
+</Warning>
+
+## Syncing Your Fork
+
+Before starting new work, always sync your fork with the upstream repository:
+
+```bash
+# Switch to trunk and pull latest changes
+git checkout trunk
+git pull upstream trunk
+
+# Push updates to your fork
+git push origin trunk
+```
+
+<Note>
+  Keep your `trunk` branch clean and always create new branches from an up-to-date `trunk`.
+</Note>
+
+## Creating Your First Branch
+
+When you're ready to start working:
+
+```bash
+# Ensure you're on trunk and it's up to date
+git checkout trunk
+git pull upstream trunk
+
+# Create a new branch with the appropriate prefix
+git checkout -b feature/your-feature-name
+```
+
+See the [Workflow](/contributing/workflow) page for detailed information about branch naming and the contribution process.
+
+## Getting Help
+
+If you have questions:
+
+<CardGroup cols={2}>
+  <Card title="Open an Issue" icon="github">
+    Open an issue with the `question` label for general questions about contributing.
+  </Card>
+  
+  <Card title="Contact Maintainers" icon="users">
+    Reach out to the project maintainers for specific guidance.
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Now that you're set up:
+
+1. Read the [Workflow Guide](/contributing/workflow) to understand the Git flow
+2. Review the [Coding Standards](/contributing/standards) before writing code
+3. Start contributing!
+
+<Note>
+  Remember: All contributions are welcome, from bug fixes to new features to documentation improvements!
+</Note>

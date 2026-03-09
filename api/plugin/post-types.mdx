@@ -1,0 +1,368 @@
+---
+title: Post Types
+description: Custom post types registered by the Bifrost Music plugin
+---
+
+The Bifrost Music plugin registers two custom post types: `music_artist` and `music_album`. These post types enable structured content management for music artists and their albums.
+
+## Music Artist Post Type
+
+The Artist post type (`music_artist`) represents individual music artists or bands.
+
+### Registration
+
+Registered in `inc/Content/Artist.php:43`
+
+```php
+register_post_type(Definitions::POST_TYPE_ARTIST, [
+    'description'         => '',
+    'public'              => true,
+    'publicly_queryable'  => true,
+    'show_in_nav_menus'   => true,
+    'show_in_admin_bar'   => true,
+    'exclude_from_search' => false,
+    'show_in_rest'        => true,
+    'show_ui'             => true,
+    'show_in_menu'        => true,
+    'menu_position'       => 21,
+    'menu_icon'           => 'dashicons-id',
+    'can_export'          => true,
+    'delete_with_user'    => false,
+    'hierarchical'        => false,
+    'has_archive'         => 'artists',
+    'query_var'           => Definitions::POST_TYPE_ARTIST,
+    'capability_type'     => Definitions::POST_TYPE_ARTIST,
+    'map_meta_cap'        => true,
+    // ... additional parameters
+]);
+```
+
+### Parameters
+
+<ParamField path="post_type" type="string" default="music_artist">
+  The post type identifier
+</ParamField>
+
+<ParamField path="public" type="boolean" default="true">
+  Whether the post type is intended for public use
+</ParamField>
+
+<ParamField path="show_in_rest" type="boolean" default="true">
+  Enables the REST API endpoint at `/wp-json/wp/v2/music_artist`
+</ParamField>
+
+<ParamField path="hierarchical" type="boolean" default="false">
+  Artists are non-hierarchical (like posts, not pages)
+</ParamField>
+
+<ParamField path="has_archive" type="string" default="artists">
+  Archive page slug accessible at `/artists`
+</ParamField>
+
+<ParamField path="menu_position" type="integer" default="21">
+  Position in admin menu (appears after Dashboard)
+</ParamField>
+
+<ParamField path="menu_icon" type="string" default="dashicons-id">
+  Dashicon class for the admin menu
+</ParamField>
+
+### Capabilities
+
+<Accordion title="Artist Capabilities">
+
+The `music_artist` post type uses custom capabilities for fine-grained permission control:
+
+#### Meta Capabilities
+
+```php
+'edit_post'              => 'edit_music_artist',
+'read_post'              => 'read_music_artist',
+'delete_post'            => 'delete_music_artist',
+```
+
+#### Primitive Capabilities
+
+```php
+'create_posts'           => 'create_music_artists',
+'edit_posts'             => 'edit_music_artists',
+'edit_others_posts'      => 'edit_others_music_artists',
+'publish_posts'          => 'publish_music_artists',
+'read_private_posts'     => 'read_private_music_artists',
+'delete_posts'           => 'delete_music_artists',
+'delete_private_posts'   => 'delete_private_music_artists',
+'delete_published_posts' => 'delete_published_music_artists',
+'delete_others_posts'    => 'delete_others_music_artists',
+'edit_private_posts'     => 'edit_private_music_artists',
+'edit_published_posts'   => 'edit_published_music_artists'
+```
+
+Source: `inc/Content/Artist.php:64-87`
+
+</Accordion>
+
+### Supported Features
+
+The Artist post type supports the following features:
+
+```php
+'supports' => [
+    'title',
+    'editor',
+    'excerpt',
+    'author',
+    'custom-fields',
+    'thumbnail'
+]
+```
+
+<CardGroup cols={2}>
+  <Card title="Title" icon="heading">
+    Artist name field
+  </Card>
+  <Card title="Editor" icon="pen">
+    Rich text editor for artist biography
+  </Card>
+  <Card title="Excerpt" icon="align-left">
+    Short artist description
+  </Card>
+  <Card title="Author" icon="user">
+    Track which user created the artist
+  </Card>
+  <Card title="Custom Fields" icon="list">
+    Support for additional metadata
+  </Card>
+  <Card title="Thumbnail" icon="image">
+    Featured image (artist photo)
+  </Card>
+</CardGroup>
+
+### URL Rewrite Rules
+
+```php
+'rewrite' => [
+    'slug'       => 'artists',
+    'with_front' => false,
+    'pages'      => true,
+    'feeds'      => true,
+    'ep_mask'    => EP_PERMALINK,
+]
+```
+
+Artist URLs follow the pattern: `/artists/{artist-slug}`
+
+---
+
+## Music Album Post Type
+
+The Album post type (`music_album`) represents music albums associated with artists.
+
+### Registration
+
+Registered in `inc/Content/Album.php:51`
+
+```php
+register_post_type(Definitions::POST_TYPE_ALBUM, [
+    'description'         => '',
+    'public'              => true,
+    'publicly_queryable'  => true,
+    'show_in_nav_menus'   => true,
+    'show_in_admin_bar'   => true,
+    'exclude_from_search' => false,
+    'show_in_rest'        => true,
+    'show_ui'             => true,
+    'show_in_menu'        => true,
+    'menu_position'       => 22,
+    'menu_icon'           => 'dashicons-playlist-audio',
+    'can_export'          => true,
+    'delete_with_user'    => false,
+    'hierarchical'        => false,
+    'has_archive'         => 'albums',
+    'query_var'           => Definitions::POST_TYPE_ALBUM,
+    'capability_type'     => Definitions::POST_TYPE_ALBUM,
+    'map_meta_cap'        => true,
+    // ... additional parameters
+]);
+```
+
+### Parameters
+
+<ParamField path="post_type" type="string" default="music_album">
+  The post type identifier
+</ParamField>
+
+<ParamField path="public" type="boolean" default="true">
+  Whether the post type is intended for public use
+</ParamField>
+
+<ParamField path="show_in_rest" type="boolean" default="true">
+  Enables the REST API endpoint at `/wp-json/wp/v2/music_album`
+</ParamField>
+
+<ParamField path="hierarchical" type="boolean" default="false">
+  Albums are non-hierarchical, but use parent field for artist relationships
+</ParamField>
+
+<ParamField path="has_archive" type="string" default="albums">
+  Archive page slug accessible at `/albums`
+</ParamField>
+
+<ParamField path="menu_position" type="integer" default="22">
+  Position in admin menu (appears after Artists)
+</ParamField>
+
+<ParamField path="menu_icon" type="string" default="dashicons-playlist-audio">
+  Dashicon class for the admin menu
+</ParamField>
+
+### Capabilities
+
+<Accordion title="Album Capabilities">
+
+The `music_album` post type uses custom capabilities:
+
+#### Meta Capabilities
+
+```php
+'edit_post'              => 'edit_music_album',
+'read_post'              => 'read_music_album',
+'delete_post'            => 'delete_music_album',
+```
+
+#### Primitive Capabilities
+
+```php
+'create_posts'           => 'create_music_albums',
+'edit_posts'             => 'edit_music_albums',
+'edit_others_posts'      => 'edit_others_music_albums',
+'publish_posts'          => 'publish_music_albums',
+'read_private_posts'     => 'read_private_music_albums',
+'delete_posts'           => 'delete_music_albums',
+'delete_private_posts'   => 'delete_private_music_albums',
+'delete_published_posts' => 'delete_published_music_albums',
+'delete_others_posts'    => 'delete_others_music_albums',
+'edit_private_posts'     => 'edit_private_music_albums',
+'edit_published_posts'   => 'edit_published_music_albums'
+```
+
+Source: `inc/Content/Album.php:72-95`
+
+</Accordion>
+
+### Supported Features
+
+The Album post type supports the same features as Artist:
+
+```php
+'supports' => [
+    'title',
+    'editor',
+    'excerpt',
+    'author',
+    'custom-fields',
+    'thumbnail'
+]
+```
+
+<CardGroup cols={2}>
+  <Card title="Title" icon="heading">
+    Album name field
+  </Card>
+  <Card title="Editor" icon="pen">
+    Rich text editor for album description
+  </Card>
+  <Card title="Excerpt" icon="align-left">
+    Short album summary
+  </Card>
+  <Card title="Author" icon="user">
+    Track which user created the album
+  </Card>
+  <Card title="Custom Fields" icon="list">
+    Support for additional metadata
+  </Card>
+  <Card title="Thumbnail" icon="image">
+    Featured image (album cover art)
+  </Card>
+</CardGroup>
+
+### URL Rewrite Rules
+
+```php
+'rewrite' => [
+    'slug'       => 'albums',
+    'with_front' => false,
+    'pages'      => true,
+    'feeds'      => true,
+    'ep_mask'    => EP_PERMALINK,
+]
+```
+
+Album URLs follow the pattern: `/albums/{album-slug}`
+
+### Parent-Child Relationships
+
+Although `music_album` is non-hierarchical, albums maintain parent-child relationships with artists using the `post_parent` field. This is exposed through the REST API (see [REST API documentation](/api/plugin/rest-api)).
+
+---
+
+## Admin Interface Customizations
+
+Both post types include custom admin interface enhancements:
+
+### Custom Title Placeholder
+
+<Accordion title="Artist Title Placeholder">
+
+```php
+private function enterTitleHere(string $title, WP_Post $post): string
+{
+    return Definitions::POST_TYPE_ARTIST === $post->post_type
+        ? esc_html__('Enter artist title', 'bifrost-music')
+        : $title;
+}
+```
+
+Source: `inc/Content/Artist.php:141-146`
+
+</Accordion>
+
+<Accordion title="Album Title Placeholder">
+
+```php
+private function enterTitleHere(string $title, WP_Post $post): string
+{
+    return Definitions::POST_TYPE_ALBUM === $post->post_type
+        ? esc_html__('Enter album title', 'bifrost-music')
+        : $title;
+}
+```
+
+Source: `inc/Content/Album.php:169-174`
+
+</Accordion>
+
+### Album Admin Columns
+
+The Album post type adds a custom "Artist" column to the admin list table:
+
+```php
+private function addParentColumn(array $columns): array
+{
+    $new_columns = [];
+
+    foreach ($columns as $key => $value) {
+        $new_columns[$key] = $value;
+
+        // Add parent column after title
+        if ('title' === $key) {
+            $new_columns['parent_artist'] = __( 'Artist', 'bifrost-music' );
+        }
+    }
+
+    return $new_columns;
+}
+```
+
+Source: `inc/Content/Album.php:237-251`
+
+The column is sortable and displays a link to the parent artist.

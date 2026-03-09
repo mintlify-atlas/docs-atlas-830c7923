@@ -1,0 +1,160 @@
+---
+title: "Full Site Editing"
+description: "Understanding Full Site Editing features in Bifrost Noise"
+---
+
+## What is Full Site Editing?
+
+Full Site Editing (FSE) is a modern approach to WordPress theme development that uses blocks for every part of your site - from the header and footer to post content and page layouts.
+
+## FSE Features in Bifrost Noise
+
+### Block-Based Templates
+
+All templates in Bifrost Noise are HTML files containing block markup:
+
+```html index.html
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main class="wp-block-group">
+	<!-- wp:query-title {"type":"archive"} /-->
+	<!-- wp:post-template -->
+		<!-- wp:post-title /-->
+		<!-- wp:post-excerpt /-->
+	<!-- /wp:post-template -->
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->
+```
+
+<Note>
+Block markup uses HTML comments with the format `<!-- wp:block-name {...attributes} /-->`. This makes templates readable and editable in both code and the Site Editor.
+</Note>
+
+### Template Hierarchy
+
+Bifrost Noise includes templates for various content types:
+
+| Template | Purpose | Priority |
+|----------|---------|----------|
+| `front-page.html` | Homepage (static or blog) | Highest |
+| `home.html` | Blog archive page | High |
+| `single-post.html` | Single blog posts | Medium |
+| `single-music_artist.html` | Artist pages | Medium |
+| `single-music_album.html` | Album pages | Medium |
+| `archive-music_artist.html` | Artist archive | Medium |
+| `archive-music_album.html` | Album archive | Medium |
+| `taxonomy-music_genre.html` | Genre taxonomy | Medium |
+| `page.html` | Static pages | Low |
+| `index.html` | Fallback template | Lowest |
+
+### Template Parts
+
+Reusable template parts that can be included in any template:
+
+```plaintext
+parts/
+├── header.html          # Site header
+└── footer.html          # Site footer
+```
+
+Include template parts using:
+
+```html
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+```
+
+## Site Editor
+
+With FSE, users can customize the entire site through the WordPress admin:
+
+<Steps>
+  <Step title="Access the Site Editor">
+    Navigate to **Appearance → Editor** in the WordPress admin
+  </Step>
+  <Step title="Choose What to Edit">
+    - Templates (page layouts)
+    - Template parts (reusable components)
+    - Patterns (content layouts)
+    - Styles (global design settings)
+  </Step>
+  <Step title="Make Changes">
+    Use the block editor interface to modify templates and styles
+  </Step>
+  <Step title="Save">
+    Changes are saved to the database and override theme files
+  </Step>
+</Steps>
+
+<Warning>
+Customizations made through the Site Editor are stored in the database and will persist even if the theme is updated. To reset to theme defaults, use the "Clear customizations" option.
+</Warning>
+
+## Block Patterns
+
+Bifrost Noise includes pre-designed block patterns that users can insert into templates:
+
+- **Archive Headers**: Title and description layouts for archives
+- **Query Loops**: Different layouts for displaying posts
+- **Post Metadata**: Author bylines and post meta displays
+- **Single Headers**: Featured layouts for single post/page headers
+
+Patterns are PHP files that register block patterns:
+
+```php patterns/post-byline-default.php
+<?php
+register_block_pattern(
+	'bifrost-noise/post-byline-default',
+	[
+		'title'       => __('Post Byline: Default', 'bifrost-noise'),
+		'description' => __('Displays post author, date, and categories.', 'bifrost-noise'),
+		'categories'  => ['posts'],
+		'content'     => '<!-- wp:group {"layout":{"type":"flex"}} -->'
+			. '<!-- wp:post-author {"showAvatar":false} /-->'
+			. '<!-- wp:post-date /-->'
+			. '<!-- /wp:group -->',
+	]
+);
+```
+
+## Global Styles
+
+All design settings are defined in `theme.json`, including:
+
+- Color palettes
+- Typography scales
+- Spacing presets
+- Layout settings
+- Block-specific styles
+
+Users can customize these through **Appearance → Editor → Styles**.
+
+## Benefits of FSE
+
+<CardGroup cols={2}>
+  <Card title="User-Friendly" icon="user">
+    Non-developers can customize the entire site without code
+  </Card>
+  <Card title="Consistent Interface" icon="grip">
+    Same editor for content, templates, and site design
+  </Card>
+  <Card title="Version Control" icon="code-branch">
+    Templates are plain HTML files that work with Git
+  </Card>
+  <Card title="No PHP Required" icon="file-code">
+    Templates use block markup instead of PHP template tags
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Theme.json" icon="gear" href="/theme/theme-json">
+    Learn about global style configuration
+  </Card>
+  <Card title="Patterns" icon="grid" href="/theme/patterns">
+    Explore block pattern development
+  </Card>
+</CardGroup>

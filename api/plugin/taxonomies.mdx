@@ -1,0 +1,273 @@
+---
+title: Taxonomies
+description: Custom taxonomies registered by the Bifrost Music plugin
+---
+
+The Bifrost Music plugin registers a custom taxonomy for categorizing music albums by genre.
+
+## Music Genre Taxonomy
+
+The Genre taxonomy (`music_genre`) is a non-hierarchical taxonomy (like tags) used to categorize albums.
+
+### Registration
+
+Registered in `inc/Content/Genre.php:36`
+
+```php
+register_taxonomy(
+    Definitions::TAXONOMY_GENRE,
+    [
+        Definitions::POST_TYPE_ALBUM
+    ],
+    [
+        'public'            => true,
+        'show_ui'           => true,
+        'show_in_nav_menus' => true,
+        'show_in_rest'      => true,
+        'show_tagcloud'     => true,
+        'show_admin_column' => true,
+        'hierarchical'      => false,
+        'query_var'         => Definitions::TAXONOMY_GENRE,
+        // ... additional parameters
+    ]
+);
+```
+
+### Parameters
+
+<ParamField path="taxonomy" type="string" default="music_genre">
+  The taxonomy identifier
+</ParamField>
+
+<ParamField path="object_type" type="array" default="['music_album']">
+  Post types this taxonomy applies to. Currently only assigned to `music_album`
+</ParamField>
+
+<ParamField path="public" type="boolean" default="true">
+  Whether the taxonomy is publicly accessible
+</ParamField>
+
+<ParamField path="show_ui" type="boolean" default="true">
+  Display UI for managing terms in the admin
+</ParamField>
+
+<ParamField path="show_in_rest" type="boolean" default="true">
+  Enables the REST API endpoint at `/wp-json/wp/v2/music_genre`
+</ParamField>
+
+<ParamField path="hierarchical" type="boolean" default="false">
+  Genres behave like tags (non-hierarchical) rather than categories
+</ParamField>
+
+<ParamField path="show_admin_column" type="boolean" default="true">
+  Display a column for this taxonomy in the album list table
+</ParamField>
+
+<ParamField path="show_tagcloud" type="boolean" default="true">
+  Allow genre tag cloud widget
+</ParamField>
+
+<ParamField path="query_var" type="string" default="music_genre">
+  Query variable for filtering by genre
+</ParamField>
+
+### Capabilities
+
+The taxonomy uses custom capabilities for permission management:
+
+```php
+'capabilities' => [
+    'manage_terms' => 'manage_music_genres',
+    'edit_terms'   => 'edit_music_genres',
+    'delete_terms' => 'delete_music_genres',
+    'assign_terms' => 'assign_music_genres'
+]
+```
+
+Source: `inc/Content/Genre.php:50-55`
+
+<CardGroup cols={2}>
+  <Card title="manage_music_genres" icon="gears">
+    Ability to manage the genre taxonomy
+  </Card>
+  <Card title="edit_music_genres" icon="pen-to-square">
+    Permission to edit genre terms
+  </Card>
+  <Card title="delete_music_genres" icon="trash">
+    Permission to delete genre terms
+  </Card>
+  <Card title="assign_music_genres" icon="tag">
+    Permission to assign genres to albums
+  </Card>
+</CardGroup>
+
+### Labels
+
+The taxonomy includes comprehensive labels for the admin interface:
+
+<Accordion title="All Labels">
+
+```php
+'labels' => [
+    'name'                  => __('Genres',                 'bifrost-music'),
+    'singular_name'         => __('Genre',                  'bifrost-music'),
+    'menu_name'             => __('Genres',                 'bifrost-music'),
+    'name_admin_bar'        => __('Genre',                  'bifrost-music'),
+    'search_items'          => __('Search Genres',          'bifrost-music'),
+    'popular_items'         => __('Popular Genres',         'bifrost-music'),
+    'all_items'             => __('All Genres',             'bifrost-music'),
+    'edit_item'             => __('Edit Genre',             'bifrost-music'),
+    'view_item'             => __('View Genre',             'bifrost-music'),
+    'update_item'           => __('Update Genre',           'bifrost-music'),
+    'add_new_item'          => __('Add New Genre',          'bifrost-music'),
+    'new_item_name'         => __('New Genre Name',         'bifrost-music'),
+    'not_found'             => __('No genres found.',       'bifrost-music'),
+    'no_terms'              => __('No genres',              'bifrost-music'),
+    'items_list_navigation' => __('Genres list navigation', 'bifrost-music'),
+    'items_list'            => __('Genres list',            'bifrost-music'),
+
+    // Non-hierarchical only labels
+    'separate_items_with_commas' => __('Separate genres with commas',      'bifrost-music'),
+    'add_or_remove_items'        => __('Add or remove genres',             'bifrost-music'),
+    'choose_from_most_used'      => __('Choose from the most used genres', 'bifrost-music')
+]
+```
+
+Source: `inc/Content/Genre.php:56-78`
+
+</Accordion>
+
+### URL Rewrite Rules
+
+Genre archive pages use custom URL structure:
+
+```php
+'rewrite' => [
+    'slug'         => 'genres',
+    'with_front'   => false,
+    'hierarchical' => false,
+    'ep_mask'      => EP_NONE
+]
+```
+
+Source: `inc/Content/Genre.php:81-86`
+
+<ParamField path="slug" type="string" default="genres">
+  URL slug for genre archives (`/genres/{genre-slug}`)
+</ParamField>
+
+<ParamField path="with_front" type="boolean" default="false">
+  Do not prepend the front base to genre permalinks
+</ParamField>
+
+<ParamField path="hierarchical" type="boolean" default="false">
+  Non-hierarchical URL structure (flat, not nested)
+</ParamField>
+
+<ParamField path="ep_mask" type="constant" default="EP_NONE">
+  No endpoint mask applied
+</ParamField>
+
+## Usage Examples
+
+### Query Albums by Genre
+
+```php
+// Get all albums in the "Rock" genre
+$args = [
+    'post_type' => 'music_album',
+    'tax_query' => [
+        [
+            'taxonomy' => 'music_genre',
+            'field'    => 'slug',
+            'terms'    => 'rock',
+        ],
+    ],
+];
+$query = new WP_Query($args);
+```
+
+### Get Genres for an Album
+
+```php
+// Get all genres assigned to an album
+$genres = get_the_terms($album_id, 'music_genre');
+
+if ($genres && !is_wp_error($genres)) {
+    foreach ($genres as $genre) {
+        echo $genre->name;
+    }
+}
+```
+
+### REST API Access
+
+```bash
+# Get all genres
+GET /wp-json/wp/v2/music_genre
+
+# Get a specific genre
+GET /wp-json/wp/v2/music_genre/{id}
+
+# Get albums for a genre
+GET /wp-json/wp/v2/music_album?music_genre={genre_id}
+```
+
+## Admin Interface
+
+### Update Messages
+
+Custom admin messages for genre operations:
+
+```php
+private function termUpdatedMessages(array $messages): array
+{
+    $messages[Definitions::TAXONOMY_GENRE] = [
+        0 => '',
+        1 => __('Genre added.',       'bifrost-music'),
+        2 => __('Genre deleted.',     'bifrost-music'),
+        3 => __('Genre updated.',     'bifrost-music'),
+        4 => __('Genre not added.',   'bifrost-music'),
+        5 => __('Genre not updated.', 'bifrost-music'),
+        6 => __('Genres deleted.',    'bifrost-music'),
+    ];
+
+    return $messages;
+}
+```
+
+Source: `inc/Content/Genre.php:93-107`
+
+### Admin Column
+
+Since `show_admin_column` is set to `true`, a Genres column automatically appears in the Albums admin list table, displaying all genres assigned to each album.
+
+## Technical Details
+
+<Accordion title="Registration Hook">
+
+The taxonomy is registered on the `init` action with priority `9`:
+
+```php
+add_action('init', $this->register(...), 9);
+```
+
+This ensures it's registered before the default priority of `10`, allowing other hooks to properly reference the taxonomy.
+
+Source: `inc/Content/Genre.php:26`
+
+</Accordion>
+
+<Accordion title="Non-Hierarchical Behavior">
+
+By setting `hierarchical` to `false`, genres behave like WordPress tags:
+
+- Multiple genres can be assigned to a single album
+- No parent-child relationships between genres
+- Text input with comma separation in the editor
+- "Popular Genres" and "Choose from most used" functionality
+- Tag cloud support for widgets
+
+This design choice reflects how music genres are typically applied, where albums can belong to multiple genres without a strict hierarchy.
+
+</Accordion>

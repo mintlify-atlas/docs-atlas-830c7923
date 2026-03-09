@@ -1,97 +1,81 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "WordPress Developer Showcase"
+description: "Explore the latest features in WordPress 6.9+ with practical examples and best practices"
 ---
 
-## Setting up
+<div style={{
+  background: "linear-gradient(135deg, #663ebc 0%, #b49cdc 100%)",
+  padding: "4rem 2rem",
+  borderRadius: "8px",
+  marginBottom: "2rem",
+  color: "white"
+}}>
+  <h1 style={{ fontSize: "48px", fontWeight: "700", marginBottom: "1rem", color: "white" }}>
+    WordPress Developer Showcase
+  </h1>
+  <p style={{ fontSize: "20px", opacity: 0.95, maxWidth: "800px", color: "white" }}>
+    A comprehensive showcase of WordPress 6.9+ features including custom post types, 
+    Full Site Editing themes, and modern development patterns.
+  </p>
+</div>
 
-Get your documentation site up and running in minutes.
+## What's Inside
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+This repository demonstrates modern WordPress development with two main components:
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Bifrost Music Plugin" icon="plug" href="/plugin/overview">
+    Custom post types, taxonomies, and Block Editor integration
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Bifrost Noise Theme" icon="paintbrush" href="/theme/overview">
+    Full Site Editing theme with patterns and theme.json v3
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
-  </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## Key Features
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Custom Post Types" icon="database" href="/plugin/custom-post-types">
+    Artists and Albums with hierarchical relationships
+  </Card>
+  <Card title="Block Editor Integration" icon="cube" href="/plugin/block-editor-integration">
+    React-based parent selector component for the editor
+  </Card>
+  <Card title="Full Site Editing" icon="wand-magic-sparkles" href="/theme/full-site-editing">
+    Modern block-based theme development
+  </Card>
+  <Card title="REST API" icon="globe" href="/api/plugin/rest-api">
+    Extended REST API for custom content types
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Getting Started
 
-## Need inspiration?
+<Steps>
+  <Step title="Check Requirements">
+    Ensure you have WordPress 6.9+, PHP 8.0+, and Node.js 18+
+  </Step>
+  <Step title="Set Up Locally">
+    Clone the repository and configure your local development environment
+  </Step>
+  <Step title="Explore the Code">
+    Dive into the plugin and theme code to see modern WordPress patterns
+  </Step>
+</Steps>
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="rocket" href="/setup">
+    Get your development environment ready
+  </Card>
+  <Card title="Contributing" icon="code-branch" href="/contributing/getting-started">
+    Learn how to contribute to the project
+  </Card>
+</CardGroup>
+
+## Architecture Highlights
+
+- **Service Container Pattern**: Dependency injection and service providers
+- **REST API Extensions**: Custom endpoints for Artists and Albums
+- **Block Editor Components**: React-based editor enhancements
+- **Theme.json v3**: Modern theme configuration
+- **Automated Deployment**: GitHub Actions workflow for vendor dependencies

@@ -1,0 +1,406 @@
+---
+title: Local Development Setup
+description: Step-by-step guide to setting up the WordPress Developer Showcase on your local machine
+---
+
+## Overview
+
+This guide walks you through setting up the WordPress Developer Showcase for local development. You'll configure WordPress 6.9+, install the theme and plugin, and set up the build tools for both PHP and JavaScript development.
+
+<Note>
+  The repository root represents the `wp-content` directory of a WordPress installation. You'll need a working WordPress environment to use this showcase.
+</Note>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- WordPress 6.9 or higher installed locally
+- PHP 8.1+ with Composer installed
+- Node.js 18+ and npm installed
+- A local development environment (Local, XAMPP, Docker, etc.)
+- Git for version control
+
+<Warning>
+  The Bifrost Noise theme and Bifrost Music plugin both require PHP 8.1 or higher. Using an older PHP version will result in fatal errors.
+</Warning>
+
+## Step-by-Step Setup
+
+<Steps>
+  <Step title="Clone the Repository">
+    Clone the repository to your local WordPress installation's `wp-content` directory:
+
+    ```bash
+    cd /path/to/wordpress/wp-content
+    git clone https://github.com/wptrainingteam/developer-showcase.git .
+    ```
+
+    <Note>
+      The repository is designed to replace your entire `wp-content` directory. Make sure to back up any existing themes or plugins first.
+    </Note>
+
+    Verify the structure:
+
+    ```bash
+    ls -la
+    ```
+
+    You should see:
+    ```
+    themes/
+    plugins/
+    CONTRIBUTING.md
+    README.md
+    ```
+  </Step>
+
+  <Step title="Install Bifrost Noise Theme Dependencies">
+    Navigate to the theme directory and install both PHP and Node.js dependencies:
+
+    ```bash
+    cd themes/bifrost-noise
+    ```
+
+    Install PHP dependencies with Composer:
+
+    ```bash
+    composer install
+    ```
+
+    This installs:
+    - WordPress Coding Standards (WPCS)
+    - PHPCompatibility for WordPress
+    - Symfony VarDumper for debugging
+    - PHP_CodeSniffer with automatic configuration
+
+    Install Node.js dependencies:
+
+    ```bash
+    npm install
+    ```
+
+    This installs:
+    - `@wordpress/scripts` for build tooling
+    - `@wordpress/blocks` and `@wordpress/i18n` for Block Editor integration
+    - Webpack plugins for asset optimization
+
+    <Note>
+      For production builds, use `composer install --no-dev --optimize-autoloader` to exclude development dependencies and optimize the autoloader.
+    </Note>
+  </Step>
+
+  <Step title="Build Theme Assets">
+    Compile the theme's JavaScript and CSS assets:
+
+    **For development** (with watch mode):
+
+    ```bash
+    npm start
+    ```
+
+    This runs `wp-scripts start` with custom configuration:
+    - Source directory: `resources/`
+    - Output directory: `public/`
+    - Enables experimental ES modules support
+    - Watches for file changes and rebuilds automatically
+
+    **For production** (optimized build):
+
+    ```bash
+    npm run build
+    ```
+
+    This creates optimized, minified assets in the `public/` directory.
+
+    <Warning>
+      The theme expects compiled assets in `public/`. If you skip this step, the theme's JavaScript and CSS won't load correctly.
+    </Warning>
+  </Step>
+
+  <Step title="Install Bifrost Music Plugin Dependencies">
+    Navigate to the plugin directory:
+
+    ```bash
+    cd ../../plugins/bifrost-music
+    ```
+
+    Install PHP dependencies:
+
+    ```bash
+    composer install
+    ```
+
+    Install Node.js dependencies:
+
+    ```bash
+    npm install
+    ```
+
+    Build plugin assets:
+
+    **For development:**
+    ```bash
+    npm start
+    ```
+
+    **For production:**
+    ```bash
+    npm run build
+    ```
+
+    This compiles the Block Editor integration scripts to the `build/` directory.
+  </Step>
+
+  <Step title="Activate Theme and Plugin">
+    Log in to your WordPress admin dashboard:
+
+    1. Navigate to **Appearance → Themes**
+    2. Activate the **Bifrost Noise** theme
+    3. Navigate to **Plugins → Installed Plugins**
+    4. Activate the **Bifrost: Music** plugin
+
+    <Note>
+      The plugin registers custom post types (Artist, Album) and a custom taxonomy (Genre). After activation, you'll see these new content types in the admin menu.
+    </Note>
+  </Step>
+
+  <Step title="Verify Installation">
+    Check that everything is working correctly:
+
+    **Theme Verification:**
+    - Visit your site's homepage
+    - Check that the theme styles are loading
+    - Open the browser console and verify no JavaScript errors
+
+    **Plugin Verification:**
+    - In the admin, look for **Artists** and **Albums** menu items
+    - Try creating a new Artist or Album
+    - Verify the Block Editor loads with custom features
+
+    **Build Tools Verification:**
+    ```bash
+    # From the theme directory
+    cd themes/bifrost-noise
+    composer run lint:php
+    ```
+
+    This runs PHP_CodeSniffer to check code standards.
+  </Step>
+</Steps>
+
+## Development Workflow
+
+### Working with the Theme
+
+<CodeGroup>
+```bash Development Mode
+# Navigate to theme directory
+cd themes/bifrost-noise
+
+# Start webpack in watch mode
+npm start
+
+# In another terminal, watch for PHP errors
+tail -f /path/to/wordpress/wp-content/debug.log
+```
+
+```bash Production Build
+# Navigate to theme directory
+cd themes/bifrost-noise
+
+# Build optimized assets
+npm run build
+
+# Build optimized PHP autoloader
+composer install --no-dev --optimize-autoloader
+```
+
+```bash Code Quality
+# Run PHP linting
+composer run lint:php
+
+# Generate theme zip file
+composer run zip
+```
+</CodeGroup>
+
+### Working with the Plugin
+
+<CodeGroup>
+```bash Development Mode
+# Navigate to plugin directory
+cd plugins/bifrost-music
+
+# Start webpack in watch mode
+npm start
+```
+
+```bash Production Build
+# Build optimized assets
+npm run build
+
+# Build optimized PHP autoloader
+composer install --no-dev --optimize-autoloader
+```
+
+```bash Code Quality
+# Run PHP linting
+composer run lint:php
+
+# Check JavaScript formatting
+npm run lint:js
+
+# Check CSS formatting
+npm run lint:css
+```
+</CodeGroup>
+
+## Directory Structure
+
+### Theme File Organization
+
+```
+bifrost-noise/
+├── src/                        # PHP source files (PSR-4: Bifrost\Noise\)
+│   ├── Block/                  # Block-related functionality
+│   │   ├── Binding/           # Custom block binding sources
+│   │   ├── Render/            # Custom render callbacks
+│   │   └── Stylesheet/        # Dynamic stylesheet loading
+│   ├── Container/             # Dependency injection container
+│   ├── Core/                  # Core application classes
+│   ├── Editor/                # Block Editor customizations
+│   ├── Frontend/              # Frontend-only functionality
+│   ├── Gutenberg/             # Gutenberg experiments
+│   ├── PostType/              # Post type modifiers
+│   └── functions-helpers.php  # Helper functions
+│
+├── resources/                 # Source JavaScript/CSS
+│   ├── js/                    # JavaScript source files
+│   └── css/                   # CSS/SCSS source files
+│
+├── public/                    # Compiled assets (generated)
+│   ├── js/                    # Compiled JavaScript
+│   └── css/                   # Compiled CSS
+│
+├── patterns/                  # Block patterns (PHP)
+│   ├── archive-header/        # Archive page headers
+│   ├── archive-query/         # Archive query loops
+│   └── single-header/         # Single post headers
+│
+├── styles/                    # Block style variations (JSON)
+│   └── block/                 # Per-block style definitions
+│
+├── theme.json                 # Theme configuration (v3)
+├── functions.php              # Theme bootstrap
+├── composer.json              # PHP dependencies
+└── package.json               # Node.js dependencies
+```
+
+### Plugin File Organization
+
+```
+bifrost-music/
+├── inc/                       # PHP source files (PSR-4: Bifrost\Music\)
+│   ├── Content/               # Custom post types and taxonomies
+│   │   ├── Artist.php        # Artist post type
+│   │   ├── Album.php         # Album post type
+│   │   └── Genre.php         # Genre taxonomy
+│   ├── Container/            # Dependency injection container
+│   ├── Core/                 # Core application classes
+│   ├── Editor/               # Block Editor integrations
+│   └── functions-helpers.php # Helper functions
+│
+├── src/                      # JavaScript source files
+│
+├── build/                    # Compiled JavaScript (generated)
+│
+├── plugin.php                # Plugin entry point
+├── composer.json             # PHP dependencies
+└── package.json              # Node.js dependencies
+```
+
+## Common Issues
+
+### Blank Screen or Fatal Errors
+
+**Cause:** PHP version is below 8.1
+
+**Solution:**
+```bash
+# Check your PHP version
+php -v
+
+# If below 8.1, upgrade PHP or configure your environment to use PHP 8.1+
+```
+
+### Assets Not Loading
+
+**Cause:** Build step was skipped or failed
+
+**Solution:**
+```bash
+# Rebuild theme assets
+cd themes/bifrost-noise
+npm run build
+
+# Rebuild plugin assets
+cd ../../plugins/bifrost-music
+npm run build
+```
+
+### Composer Errors
+
+**Cause:** Composer not installed or outdated
+
+**Solution:**
+```bash
+# Install Composer (if not installed)
+curl -sS https://getcomposer.org/installer | php
+
+# Update Composer
+composer self-update
+
+# Clear Composer cache
+composer clear-cache
+```
+
+### Class Not Found Errors
+
+**Cause:** Composer autoloader not generated
+
+**Solution:**
+```bash
+# Regenerate autoloader
+cd themes/bifrost-noise
+composer dump-autoload
+
+cd ../../plugins/bifrost-music
+composer dump-autoload
+```
+
+## Next Steps
+
+Now that your development environment is set up:
+
+<CardGroup cols={2}>
+  <Card title="Explore the Theme" icon="palette">
+    Dive into `themes/bifrost-noise/src/` to see modern theme architecture patterns
+  </Card>
+  
+  <Card title="Explore the Plugin" icon="plug">
+    Check out `plugins/bifrost-music/inc/` to learn about custom post types and service containers
+  </Card>
+  
+  <Card title="Review theme.json" icon="file-code">
+    Study `themes/bifrost-noise/theme.json` to understand theme.json v3 configuration
+  </Card>
+  
+  <Card title="Create Content" icon="pencil">
+    Start creating Artists, Albums, and blog posts to see the showcase in action
+  </Card>
+</CardGroup>
+
+<Note>
+  For contribution guidelines and Git workflow, see the [CONTRIBUTING.md](https://github.com/wptrainingteam/developer-showcase/blob/trunk/CONTRIBUTING.md) file in the repository.
+</Note>

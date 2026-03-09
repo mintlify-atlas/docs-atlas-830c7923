@@ -1,0 +1,420 @@
+---
+title: System Requirements
+description: Hardware, software, and dependency requirements for running the WordPress Developer Showcase
+---
+
+## Overview
+
+The WordPress Developer Showcase is built on modern technologies and requires specific versions of WordPress, PHP, and Node.js to function correctly. This page details all requirements for both development and production environments.
+
+<Warning>
+  Both the Bifrost Noise theme and Bifrost Music plugin require **PHP 8.1 or higher**. Using older PHP versions will result in fatal errors.
+</Warning>
+
+## Core Requirements
+
+### WordPress Version
+
+<CardGroup cols={2}>
+  <Card title="Minimum Version" icon="wordpress">
+    **WordPress 6.9** or higher
+  </Card>
+  
+  <Card title="Recommended" icon="star">
+    **Latest stable release** of WordPress
+  </Card>
+</CardGroup>
+
+The showcase leverages features introduced in WordPress 6.9, including:
+
+- **Block Bindings API** - Connect custom data sources to block attributes
+- **Theme.json v3** - Enhanced theme configuration schema
+- **Block Hooks API** - Programmatically modify block registration
+- **Pattern Overrides** - Enhanced pattern customization capabilities
+- **Interactivity API** - New frontend interactivity framework
+
+### PHP Requirements
+
+| Component | Minimum Version | Recommended Version |
+|-----------|----------------|---------------------|
+| **Bifrost Noise Theme** | PHP 8.1 | PHP 8.3 |
+| **Bifrost Music Plugin** | PHP 8.1 | PHP 8.3 |
+
+<Note>
+  Both the theme and plugin specify `"php": ">=8.1"` in their composer.json files. This is enforced by WordPress when activating the theme or plugin.
+</Note>
+
+#### Required PHP Extensions
+
+The following PHP extensions are required:
+
+- **json** - JSON encoding/decoding (required by WordPress core)
+- **mbstring** - Multibyte string handling
+- **mysqli** or **pdo_mysql** - Database connectivity
+- **curl** - HTTP requests (for WordPress HTTP API)
+- **openssl** - Secure connections
+- **zip** - Handling zip archives (for plugin/theme installation)
+
+#### Recommended PHP Extensions
+
+- **gd** or **imagick** - Image processing
+- **intl** - Internationalization support
+- **opcache** - Performance optimization
+- **apcu** - Object caching (for production)
+
+### Node.js Requirements
+
+| Purpose | Minimum Version | Recommended Version |
+|---------|----------------|---------------------|
+| **Asset Building** | Node.js 18.x | Node.js 20.x (LTS) |
+| **Package Manager** | npm 9.x | npm 10.x |
+
+<Note>
+  The build process uses `@wordpress/scripts` which requires Node.js 18 or higher. Older versions are not supported.
+</Note>
+
+### Composer Requirements
+
+| Component | Minimum Version |
+|-----------|----------------|
+| **Composer** | 2.0 or higher |
+
+## Development Dependencies
+
+### Theme Development (Bifrost Noise)
+
+#### PHP Dependencies (via Composer)
+
+```json
+{
+  "require": {
+    "php": ">=8.1"
+  },
+  "require-dev": {
+    "wp-coding-standards/wpcs": "^3.0",
+    "phpcompatibility/phpcompatibility-wp": "*",
+    "symfony/var-dumper": "^6.4",
+    "dealerdirect/phpcodesniffer-composer-installer": "^1.0"
+  }
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="WPCS" icon="code">
+    WordPress Coding Standards for PHP_CodeSniffer - enforces WordPress coding style
+  </Card>
+  
+  <Card title="PHPCompatibility" icon="check-circle">
+    Checks PHP version compatibility for WordPress environments
+  </Card>
+  
+  <Card title="VarDumper" icon="bug">
+    Symfony's debugging component for enhanced var_dump() functionality
+  </Card>
+  
+  <Card title="CodeSniffer Installer" icon="download">
+    Automatically configures PHP_CodeSniffer with WordPress standards
+  </Card>
+</CardGroup>
+
+#### Node.js Dependencies (via npm)
+
+```json
+{
+  "dependencies": {
+    "@wordpress/blocks": "^15.12.0",
+    "@wordpress/i18n": "^6.12.0",
+    "@wordpress/scripts": "^31.4.0",
+    "copy-webpack-plugin": "^13.0.1",
+    "glob": "^13.0.3",
+    "path": "^0.12.7",
+    "webpack-remove-empty-scripts": "^1.1.1"
+  }
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="@wordpress/scripts" icon="wrench">
+    WordPress-maintained webpack configuration and build tools
+  </Card>
+  
+  <Card title="@wordpress/blocks" icon="cube">
+    Block Editor block registration and manipulation APIs
+  </Card>
+  
+  <Card title="@wordpress/i18n" icon="language">
+    Internationalization functions for JavaScript
+  </Card>
+  
+  <Card title="Webpack Plugins" icon="plug">
+    Custom webpack plugins for optimized asset compilation
+  </Card>
+</CardGroup>
+
+### Plugin Development (Bifrost Music)
+
+#### PHP Dependencies (via Composer)
+
+Same as theme requirements (see above).
+
+#### Node.js Dependencies (via npm)
+
+```json
+{
+  "scripts": {
+    "build": "wp-scripts build",
+    "start": "wp-scripts start",
+    "check-licenses": "wp-scripts check-licenses",
+    "format": "wp-scripts format",
+    "lint:css": "wp-scripts lint-style",
+    "lint:js": "wp-scripts lint-js"
+  },
+  "devDependencies": {
+    "@wordpress/scripts": "^27.0.0"
+  }
+}
+```
+
+## Production Requirements
+
+### Server Environment
+
+<Note>
+  Production deployments should use optimized builds without development dependencies.
+</Note>
+
+| Component | Requirement |
+|-----------|-------------|
+| **Web Server** | Apache 2.4+ with mod_rewrite OR Nginx 1.18+ |
+| **PHP** | 8.1+ with OPcache enabled |
+| **Database** | MySQL 5.7+ OR MariaDB 10.5+ |
+| **Memory Limit** | 256 MB minimum (512 MB recommended) |
+| **Max Execution Time** | 60 seconds minimum |
+
+### Production Build Commands
+
+<CodeGroup>
+```bash Theme Production Build
+cd themes/bifrost-noise
+
+# Install production PHP dependencies
+composer install --no-dev --optimize-autoloader
+
+# Build optimized assets
+npm run build
+```
+
+```bash Plugin Production Build
+cd plugins/bifrost-music
+
+# Install production PHP dependencies
+composer install --no-dev --optimize-autoloader
+
+# Build optimized assets
+npm run build
+```
+</CodeGroup>
+
+<Warning>
+  The `--no-dev` flag excludes development dependencies like WPCS and VarDumper. The `--optimize-autoloader` flag generates an optimized class map for better performance.
+</Warning>
+
+## Local Development Environment Options
+
+Any of the following local development environments will work:
+
+<CardGroup cols={2}>
+  <Card title="Local by Flywheel" icon="laptop">
+    Recommended for beginners. Provides one-click WordPress setup with easy PHP version switching.
+  </Card>
+  
+  <Card title="Docker / wp-env" icon="docker">
+    Official WordPress Docker environment. Great for consistent development across teams.
+  </Card>
+  
+  <Card title="XAMPP / MAMP" icon="server">
+    Traditional local server stacks. More manual configuration required.
+  </Card>
+  
+  <Card title="Laravel Valet" icon="leaf">
+    For macOS developers. Lightweight and fast with minimal configuration.
+  </Card>
+</CardGroup>
+
+### Example: Local by Flywheel Configuration
+
+1. **PHP Version:** 8.1 or higher
+2. **Web Server:** Nginx (default)
+3. **Database:** MySQL 8.0
+4. **WordPress:** Latest version
+
+### Example: wp-env Configuration
+
+Create a `.wp-env.json` file:
+
+```json
+{
+  "core": "WordPress/WordPress#6.9",
+  "phpVersion": "8.1",
+  "plugins": [
+    "./plugins/bifrost-music"
+  ],
+  "themes": [
+    "./themes/bifrost-noise"
+  ]
+}
+```
+
+Then run:
+
+```bash
+npx @wordpress/env start
+```
+
+## Optional Components
+
+### Recommended Tools
+
+<CardGroup cols={2}>
+  <Card title="Git" icon="git-alt">
+    Version control system for contributing to the project
+  </Card>
+  
+  <Card title="VS Code" icon="code">
+    Code editor with excellent WordPress development extensions
+  </Card>
+  
+  <Card title="WP-CLI" icon="terminal">
+    Command-line interface for WordPress management and automation
+  </Card>
+  
+  <Card title="Xdebug" icon="bug">
+    PHP debugger for step-through debugging and profiling
+  </Card>
+</CardGroup>
+
+### Useful VS Code Extensions
+
+- **PHP Intelephense** - PHP code intelligence
+- **WordPress Snippets** - WordPress function snippets
+- **ESLint** - JavaScript linting
+- **Prettier** - Code formatting
+- **EditorConfig** - Consistent coding styles
+
+## Browser Requirements
+
+### Development
+
+For Block Editor development, use modern browsers:
+
+- **Chrome** 90+ (recommended for DevTools)
+- **Firefox** 88+
+- **Safari** 15+
+- **Edge** 90+
+
+### Production
+
+The theme and plugin are compatible with:
+
+- All evergreen browsers (auto-updating)
+- IE11 is **not supported** (consistent with WordPress 6.9+ policy)
+
+## Deployment Environment
+
+The showcase includes automated deployment workflows for:
+
+### GitHub Actions Requirements
+
+| Requirement | Description |
+|-------------|-------------|
+| **GitHub Environments** | Separate `production` and `staging` environments |
+| **SFTP Credentials** | For automated vendor folder deployment |
+| **Repository Secrets** | `SFTP_USER`, `SFTP_PASSWORD`, `SFTP_KNOWN_HOSTS` |
+
+<Note>
+  See the [CONTRIBUTING.md](https://github.com/wptrainingteam/developer-showcase/blob/trunk/CONTRIBUTING.md) file for detailed deployment workflow information.
+</Note>
+
+## Verification Checklist
+
+Before starting development, verify your environment meets these requirements:
+
+<Steps>
+  <Step title="Check PHP Version">
+    ```bash
+    php -v
+    # Should show 8.1 or higher
+    ```
+  </Step>
+  
+  <Step title="Check Node.js Version">
+    ```bash
+    node -v
+    # Should show v18.x or higher
+    
+    npm -v
+    # Should show 9.x or higher
+    ```
+  </Step>
+  
+  <Step title="Check Composer">
+    ```bash
+    composer --version
+    # Should show 2.x
+    ```
+  </Step>
+  
+  <Step title="Verify WordPress Version">
+    ```bash
+    wp core version
+    # Should show 6.9 or higher
+    ```
+  </Step>
+  
+  <Step title="Check PHP Extensions">
+    ```bash
+    php -m | grep -E "(json|mbstring|mysqli|curl|openssl|zip)"
+    # All should be listed
+    ```
+  </Step>
+</Steps>
+
+## Troubleshooting
+
+### PHP Version Errors
+
+**Error:** "Parse error: syntax error, unexpected token..."
+
+**Solution:** Your PHP version is too old. Upgrade to PHP 8.1 or higher.
+
+### Node.js Version Errors
+
+**Error:** "This version of Node.js requires a newer version..."
+
+**Solution:** 
+```bash
+# Install nvm (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install Node.js 20 LTS
+nvm install 20
+nvm use 20
+```
+
+### Composer Installation Issues
+
+**Error:** "Fatal error: Allowed memory size..."
+
+**Solution:**
+```bash
+# Increase PHP memory limit for Composer
+php -d memory_limit=-1 $(which composer) install
+```
+
+## Next Steps
+
+Once you've verified all requirements are met:
+
+<Card title="Proceed to Setup" icon="arrow-right" href="/setup">
+  Follow the step-by-step installation guide to get the showcase running locally
+</Card>

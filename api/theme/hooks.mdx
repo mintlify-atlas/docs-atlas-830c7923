@@ -1,0 +1,388 @@
+---
+title: Theme Hooks
+description: Actions and filters available in the Bifrost Noise theme
+---
+
+The Bifrost Noise theme uses WordPress hooks extensively to provide extensibility and customization points. This page documents all the theme's hooks, filters, and actions.
+
+## Theme Application Hooks
+
+### bifrost/noise/register
+
+Fires after the theme application has registered its default bindings and service providers, allowing third-party developers to register their own service providers.
+
+**Location:** src/Core/Application.php:60
+
+```php
+do_action('bifrost/noise/register', $application);
+```
+
+**Parameters:**
+- `$application` (Application) - The theme application instance
+
+**Example:**
+
+```php
+add_action('bifrost/noise/register', function($app) {
+    $app->register(MyCustomServiceProvider::class);
+});
+```
+
+---
+
+### bifrost/noise/booted
+
+Fires after all service providers have been booted, providing a hook for third-party code to execute after theme initialization is complete.
+
+**Location:** src/Core/Application.php:123
+
+```php
+do_action('bifrost/noise/booted', $application);
+```
+
+**Parameters:**
+- `$application` (Application) - The theme application instance
+
+**Example:**
+
+```php
+add_action('bifrost/noise/booted', function($app) {
+    // Theme is fully initialized
+    // Access services via $app->container()->get(ServiceClass::class)
+});
+```
+
+## WordPress Core Hooks
+
+The theme hooks into various WordPress core actions and filters. These are documented here for reference.
+
+### after_setup_theme
+
+Used to initialize the theme and boot registered services.
+
+**Location:** functions.php:26-29
+
+```php
+add_action('after_setup_theme', theme(...), 999);
+add_action('after_setup_theme', fn() => theme()->boot(), 999999);
+```
+
+**Also used in:** src/ThemeSetup.php:28
+
+---
+
+## Frontend Hooks
+
+### wp_enqueue_scripts
+
+Enqueues frontend scripts and styles.
+
+**Location:** src/Frontend/FrontendAssets.php:35
+
+```php
+add_action('wp_enqueue_scripts', $this->enqueue(...));
+```
+
+**What it does:**
+- Enqueues the cursor JavaScript (`public/js/cursor.js`)
+- Enqueues the primary stylesheet (`public/css/screen.css`)
+- Adds path data for potential stylesheet inlining
+
+---
+
+### styles_inline_size_limit
+
+Filters the inline CSS size limit to allow larger stylesheets to be inlined.
+
+**Location:** src/Frontend/FrontendAssets.php:36
+
+```php
+add_filter('styles_inline_size_limit', $this->inlineStylesLimit(...));
+```
+
+**Parameters:**
+- `$total_inline_limit` (int) - Current inline size limit
+
+**Returns:** (int) The maximum of 50000 bytes or the current limit
+
+**Example:**
+
+```php
+add_filter('styles_inline_size_limit', function($limit) {
+    return max(50000, $limit);
+});
+```
+
+---
+
+## Editor Hooks
+
+### enqueue_block_editor_assets
+
+Enqueues editor-specific assets.
+
+**Location:** src/Editor/EditorAssets.php:28
+
+```php
+add_action('enqueue_block_editor_assets', $this->enqueue(...));
+```
+
+**What it does:**
+- Enqueues the editor JavaScript (`public/js/editor.js`)
+- Sets script translations for the editor
+
+---
+
+### block_editor_settings_all
+
+Customizes block editor settings.
+
+**Location:** src/Editor/EditorSettings.php:28
+
+```php
+add_filter('block_editor_settings_all', $this->settings(...));
+```
+
+**What it does:**
+- Sets `disableContentOnlyForUnsyncedPatterns` to `true`
+- Sets `fontLibraryEnabled` to `false`
+
+**Parameters:**
+- `$settings` (array) - Block editor settings
+
+**Returns:** (array) Modified settings
+
+---
+
+## Block Hooks
+
+### init (Block Stylesheets)
+
+Registers and enqueues block-specific stylesheets.
+
+**Location:** src/Block/Stylesheet/StylesheetLoader.php:43
+
+```php
+add_action('init', $this->enqueue(...), 999999);
+```
+
+**What it does:**
+- Automatically discovers block stylesheets in `public/css/blocks/`
+- Conditionally loads styles only when blocks are used
+
+---
+
+### init (Block Bindings)
+
+Registers custom block binding sources.
+
+**Location:** src/Block/Binding/BindingSourceRegistrar.php:34
+
+```php
+add_action('init', $this->register(...));
+```
+
+**What it does:**
+- Registers the following binding sources:
+  - `bifrost-music/album` - Album metadata bindings
+  - `bifrost-music/post-type` - Post type metadata bindings
+  - `bifrost-music/query` - Query context bindings
+  - `bifrost-music/term` - Taxonomy term bindings
+  - `bifrost-music/user` - User metadata bindings
+
+---
+
+### block_bindings_supported_attributes_{$block_name}
+
+Adds supported bindable attributes to specific blocks.
+
+**Location:** src/Block/Binding/BindingAttributeSupport.php:40-44
+
+```php
+add_filter("block_bindings_supported_attributes_{$blockName}", 
+    $this->addSupportedAttributes(...)
+);
+```
+
+**Supported blocks:**
+- `core/cover` - Adds `url` attribute support
+- `outermost/icon-block` - Adds `icon` attribute support
+
+**Parameters:**
+- `$attrs` (array) - Current supported attributes
+
+**Returns:** (array) Extended attributes array
+
+---
+
+### render_block_core/cover
+
+Filters the rendered output of the Cover block to apply block bindings.
+
+**Location:** src/Block/Render/RenderCover.php:30
+
+```php
+add_filter('render_block_core/cover', $this->render(...), 10, 3);
+```
+
+**Parameters:**
+- `$block_content` (string) - The block's HTML content
+- `$block` (array) - The block's attributes and data
+- `$block_instance` (WP_Block) - The block instance
+
+**Returns:** (string) Modified block content
+
+**What it does:**
+- Processes `bifrost-music/term` binding source for the `url` attribute
+- Replaces background image URLs in the block's inline styles
+
+---
+
+### render_block_outermost/icon-block
+
+Filters the rendered output of the Icon Block to apply block bindings.
+
+**Location:** src/Block/Render/RenderIcon.php:29
+
+```php
+add_filter('render_block_outermost/icon-block', $this->render(...), 10, 3);
+```
+
+**Parameters:**
+- `$block_content` (string) - The block's HTML content
+- `$block` (array) - The block's attributes and data
+- `$block_instance` (WP_Block) - The block instance
+
+**Returns:** (string) Modified block content
+
+**What it does:**
+- Processes `bifrost-music/post-type` binding source for the `icon` attribute
+- Replaces SVG content in the rendered output
+
+---
+
+### pre_render_block
+
+Filters blocks before rendering, used to modify query parameters.
+
+**Location:** src/Block/Render/RenderQuery.php:29
+
+```php
+add_filter('pre_render_block', $this->preRender(...), 999, 2);
+```
+
+**Parameters:**
+- `$pre_render` (string|null) - Pre-rendered content (null by default)
+- `$parsed_block` (array) - The parsed block data
+
+**Returns:** (string|null) Pre-rendered content or null
+
+**What it does:**
+- Detects the `bifrost-noise/query-artist-albums` variation
+- Adds a filter to modify query variables for artist album queries
+
+---
+
+### query_loop_block_query_vars
+
+Modifies query variables for the Query Loop block (added dynamically).
+
+**Location:** src/Block/Render/RenderQuery.php:40-52
+
+```php
+add_filter('query_loop_block_query_vars', 
+    function(array $query, object $block): array {
+        // Implementation
+    }, 10, 2
+);
+```
+
+**Parameters:**
+- `$query` (array) - Query variables
+- `$block` (object) - The block instance
+
+**Returns:** (array) Modified query variables
+
+**What it does:**
+- Sets `post_parent` to current artist ID when on an artist page
+- Used for the artist albums query variation
+
+---
+
+## Post Type Hooks
+
+### register_post_type_args
+
+Filters post type registration arguments to apply custom modifications.
+
+**Location:** src/PostType/PostTypeModifierManager.php:40
+
+```php
+add_filter('register_post_type_args', $this->modify(...), 999999, 2);
+```
+
+**Parameters:**
+- `$args` (array) - Post type registration arguments
+- `$post_type` (string) - The post type name
+
+**Returns:** (array) Modified arguments
+
+**What it does:**
+- Applies custom modifications for registered post types:
+  - `music_album` - Modified by `Modifiers\Album`
+  - `music_artist` - Modified by `Modifiers\Artist`
+  - `post` - Modified by `Modifiers\Post`
+
+---
+
+## Gutenberg Hooks
+
+### option_gutenberg-experiments
+
+Enables experimental Gutenberg features.
+
+**Location:** src/Gutenberg/GutenbergExperiments.php:35
+
+```php
+add_filter('option_gutenberg-experiments', 
+    $this->experimentalOptions(...), 999999
+);
+```
+
+**Parameters:**
+- `$experiments` (mixed) - Current experimental options
+
+**Returns:** (array) Merged experimental options
+
+**What it does:**
+- Enables `gutenberg-block-experiments` feature
+
+---
+
+## Removed Hooks
+
+The theme removes certain default WordPress hooks for optimization:
+
+### wp_head (emoji script)
+
+**Location:** src/Frontend/FrontendAssets.php:39
+
+```php
+remove_action('wp_head', 'print_emoji_detection_script', 7);
+```
+
+**What it does:**
+- Disables the emoji detection script on the frontend for performance
+
+---
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Theme Functions" icon="code" href="/api/theme/functions">
+    Helper functions and theme API
+  </Card>
+  <Card title="Theme Overview" icon="paintbrush" href="/theme/overview">
+    Learn about the theme's architecture
+  </Card>
+</CardGroup>

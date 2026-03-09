@@ -1,0 +1,171 @@
+---
+title: Introduction
+description: A comprehensive showcase for WordPress 6.9+ developers featuring modern themes, plugins, and best practices
+---
+
+## Welcome to WordPress Developer Showcase
+
+The WordPress Developer Showcase is a curated collection of developer resources, examples, and demonstrations specifically designed for WordPress 6.9 and beyond. This repository serves as a comprehensive learning platform for developers exploring the latest features, APIs, and capabilities in modern WordPress development.
+
+<Note>
+  This showcase is built on WordPress 6.9+, featuring the latest Block Editor capabilities, theme.json v3, and modern PHP development patterns.
+</Note>
+
+## What's Inside
+
+The showcase includes production-ready examples that demonstrate:
+
+<CardGroup cols={2}>
+  <Card title="Bifrost Noise Theme" icon="palette">
+    A modern music-focused block theme showcasing advanced theme.json configuration, custom block bindings, and sophisticated styling patterns
+  </Card>
+  
+  <Card title="Bifrost Music Plugin" icon="music">
+    Custom content types for music industry workflows, including Artists, Albums, and Genres with full Block Editor integration
+  </Card>
+  
+  <Card title="Modern Architecture" icon="code">
+    PSR-4 autoloading, service containers, dependency injection, and modular design patterns for WordPress development
+  </Card>
+  
+  <Card title="Developer Workflows" icon="git-branch">
+    Automated deployments, Composer integration, npm build processes, and GitHub Actions for staging and production environments
+  </Card>
+</CardGroup>
+
+## Why This Showcase Matters
+
+### Real-World Examples
+
+Unlike simple tutorials, this showcase provides production-quality code that demonstrates:
+
+- **Block Theme Development**: Full-featured theme.json v3 configuration with custom block styles, patterns, and variations
+- **Custom Block Bindings**: Advanced binding sources for connecting custom post types and taxonomies to block attributes
+- **Modern PHP Architecture**: Service providers, dependency injection containers, and PSR-4 autoloading patterns
+- **Asset Management**: Webpack-based build processes with @wordpress/scripts for modern JavaScript and CSS
+- **Custom Post Types**: Music-focused content architecture with hierarchical relationships
+
+### Best Practices Built-In
+
+<CardGroup cols={2}>
+  <Card title="Code Standards" icon="check">
+    WordPress Coding Standards (WPCS) with PHP_CodeSniffer integration and automated linting
+  </Card>
+  
+  <Card title="Version Control" icon="code-branch">
+    Simplified Git Flow with separate staging and production branches for safe deployments
+  </Card>
+  
+  <Card title="Composer Integration" icon="box">
+    Modern dependency management with optimized autoloading for production environments
+  </Card>
+  
+  <Card title="CI/CD Pipeline" icon="rocket">
+    GitHub Actions workflows for automated vendor deployments via SFTP to WordPress.com
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### Theme Capabilities
+
+The **Bifrost Noise** theme demonstrates:
+
+- Advanced theme.json v3 schema with custom color palettes, typography scales, and spacing systems
+- Custom block styles and variations for core blocks (buttons, images, headings, etc.)
+- Block binding sources for dynamic content from custom post types
+- Custom render callbacks for enhanced query and cover blocks
+- Pattern-based template system for archive headers and single post layouts
+- Frontend and editor-specific asset loading with proper dependency management
+
+### Plugin Architecture
+
+The **Bifrost Music** plugin showcases:
+
+- Custom post types (Artist, Album) with hierarchical relationships
+- Custom taxonomy (Genre) for music categorization  
+- Service container architecture for modular, testable code
+- Editor integrations for enhanced Block Editor experience
+- Proper plugin lifecycle management (activation, deactivation, uninstall)
+
+## Who Should Use This
+
+<CardGroup cols={3}>
+  <Card title="Theme Developers" icon="paintbrush">
+    Learn modern block theme development with real-world examples of theme.json configuration and custom blocks
+  </Card>
+  
+  <Card title="Plugin Developers" icon="plug">
+    Explore modern plugin architecture patterns with service containers and PSR-4 autoloading
+  </Card>
+  
+  <Card title="Full-Stack Developers" icon="layer-group">
+    See how WordPress integrates with modern JavaScript tooling, Composer, and automated deployment workflows
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+Ready to get started? Follow these guides:
+
+<Steps>
+  <Step title="Check Requirements">
+    Review the [system requirements](/requirements) to ensure your environment is ready for WordPress 6.9+ development
+  </Step>
+  
+  <Step title="Set Up Local Environment">
+    Follow the [setup guide](/setup) to install and configure the showcase on your local development machine
+  </Step>
+  
+  <Step title="Explore the Code">
+    Dive into the themes and plugins directories to see modern WordPress development patterns in action
+  </Step>
+</Steps>
+
+<Warning>
+  This is a showcase project for learning and reference. While the code is production-quality, you should review and adapt it to your specific needs before using in production.
+</Warning>
+
+## Repository Structure
+
+The repository root represents the `wp-content` directory:
+
+```
+wp-content/
+├── themes/
+│   └── bifrost-noise/          # Modern music block theme
+│       ├── src/                # PHP source files (PSR-4)
+│       ├── resources/          # JavaScript/CSS source
+│       ├── public/             # Compiled assets
+│       ├── patterns/           # Block patterns
+│       ├── styles/             # Block style variations
+│       ├── theme.json          # Theme configuration
+│       ├── composer.json       # PHP dependencies
+│       └── package.json        # Node.js dependencies
+│
+├── plugins/
+│   └── bifrost-music/          # Music content types plugin
+│       ├── inc/                # PHP source files (PSR-4)
+│       ├── src/                # JavaScript source
+│       ├── build/              # Compiled JavaScript
+│       ├── plugin.php          # Plugin entry point
+│       ├── composer.json       # PHP dependencies
+│       └── package.json        # Node.js dependencies
+│
+├── CONTRIBUTING.md             # Contribution guidelines
+└── README.md                   # Project overview
+```
+
+## Learn More
+
+Explore these resources to deepen your understanding:
+
+- [WordPress 6.9 Release Notes](https://wordpress.org/news/) - What's new in WordPress 6.9
+- [Block Editor Handbook](https://developer.wordpress.org/block-editor/) - Official Block Editor documentation
+- [Theme Handbook](https://developer.wordpress.org/themes/) - WordPress theme development guide
+- [Plugin Handbook](https://developer.wordpress.org/plugins/) - WordPress plugin development guide
+- [Theme.json Reference](https://developer.wordpress.org/block-editor/reference-guides/theme-json-reference/) - Complete theme.json documentation
+
+<Note>
+  This project is licensed under GPL-3.0-or-later, the same license as WordPress itself. Contributions from the community are welcome!
+</Note>

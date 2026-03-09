@@ -1,0 +1,265 @@
+---
+title: "Block Patterns"
+description: "Creating and using block patterns in Bifrost Noise"
+---
+
+## What are Block Patterns?
+
+Block patterns are pre-designed block layouts that users can insert into their content with a single click. They're like templates for common content structures.
+
+## Pattern Structure
+
+Bifrost Noise includes patterns organized by type:
+
+```plaintext
+patterns/
+├── archive-header/           # Archive page headers
+├── archive-query/            # Post query loops
+├── single-header/            # Single post/page headers
+├── post-byline-default.php   # Author and date
+├── post-byline-short.php     # Minimal byline
+├── post-excerpt.php          # Post excerpt layout
+├── post-meta-default.php     # Post metadata
+└── query-grid.php            # Grid layout for posts
+```
+
+## Creating a Pattern
+
+Patterns are PHP files that register patterns using `register_block_pattern()`:
+
+```php post-byline-default.php
+<?php
+/**
+ * Title: Post Byline: Default
+ * Slug: bifrost-noise/post-byline-default
+ * Categories: posts
+ * Description: Displays post author, date, and categories.
+ */
+
+register_block_pattern(
+	'bifrost-noise/post-byline-default',
+	[
+		'title'       => __('Post Byline: Default', 'bifrost-noise'),
+		'description' => __('Displays post author, date, and categories.', 'bifrost-noise'),
+		'categories'  => ['posts'],
+		'keywords'    => ['author', 'date', 'meta'],
+		'content'     => '
+			<!-- wp:group {"layout":{"type":"flex","flexWrap":"wrap"}} -->
+			<div class="wp-block-group">
+				<!-- wp:post-author {"showAvatar":false,"showBio":false} /-->
+				<!-- wp:post-date /-->
+				<!-- wp:post-terms {"term":"category"} /-->
+			</div>
+			<!-- /wp:group -->
+		',
+	]
+);
+```
+
+<Info>
+Pattern file headers are optional but recommended for documentation purposes. The `register_block_pattern()` call is what actually registers the pattern.
+</Info>
+
+## Pattern Parameters
+
+<ParamField path="title" type="string" required>
+  Display name shown in the pattern inserter
+</ParamField>
+
+<ParamField path="description" type="string">
+  Description shown when hovering over the pattern
+</ParamField>
+
+<ParamField path="categories" type="array">
+  Pattern categories for organization. Common values: `posts`, `text`, `buttons`, `header`, `footer`
+</ParamField>
+
+<ParamField path="keywords" type="array">
+  Search keywords to help users find the pattern
+</ParamField>
+
+<ParamField path="content" type="string" required>
+  Block markup (HTML with block comments) that makes up the pattern
+</ParamField>
+
+<ParamField path="viewportWidth" type="int">
+  Width in pixels for the pattern preview (default: 1200)
+</ParamField>
+
+<ParamField path="blockTypes" type="array">
+  Block types this pattern is designed for (shows up in block variations)
+</ParamField>
+
+<ParamField path="postTypes" type="array">
+  Limit pattern to specific post types
+</ParamField>
+
+## Archive Header Patterns
+
+Patterns for archive page headers:
+
+```php archive-header/default.php
+register_block_pattern(
+	'bifrost-noise/archive-header-default',
+	[
+		'title'      => __('Archive Header: Default', 'bifrost-noise'),
+		'categories' => ['header'],
+		'content'    => '
+			<!-- wp:group {"align":"full","layout":{"type":"constrained"}} -->
+			<div class="wp-block-group alignfull">
+				<!-- wp:query-title {"type":"archive"} /-->
+				<!-- wp:term-description /-->
+			</div>
+			<!-- /wp:group -->
+		',
+	]
+);
+```
+
+## Query Patterns
+
+Patterns for displaying post lists:
+
+```php query-grid.php
+register_block_pattern(
+	'bifrost-noise/query-grid',
+	[
+		'title'      => __('Post Grid', 'bifrost-noise'),
+		'categories' => ['posts'],
+		'blockTypes' => ['core/query'],
+		'content'    => '
+			<!-- wp:query {"query":{"perPage":9,"pages":0,"offset":0,"postType":"post","order":"desc","orderBy":"date"}} -->
+			<div class="wp-block-query">
+				<!-- wp:post-template {"layout":{"type":"grid","columnCount":3}} -->
+					<!-- wp:post-featured-image {"isLink":true,"aspectRatio":"16/9"} /-->
+					<!-- wp:post-title {"isLink":true} /-->
+					<!-- wp:post-excerpt /-->
+				<!-- /wp:post-template -->
+				<!-- wp:query-pagination /-->
+			</div>
+			<!-- /wp:query -->
+		',
+	]
+);
+```
+
+## Single Post Patterns
+
+Patterns for single post layouts:
+
+```php post-excerpt.php
+register_block_pattern(
+	'bifrost-noise/post-excerpt',
+	[
+		'title'       => __('Post Excerpt', 'bifrost-noise'),
+		'description' => __('Post excerpt with read more link.', 'bifrost-noise'),
+		'categories'  => ['posts'],
+		'content'     => '
+			<!-- wp:group {"layout":{"type":"constrained"}} -->
+			<div class="wp-block-group">
+				<!-- wp:post-excerpt {"moreText":"Continue reading"} /-->
+			</div>
+			<!-- /wp:group -->
+		',
+	]
+);
+```
+
+## Using Patterns in Templates
+
+Reference patterns directly in template files:
+
+```html single-post.html
+<!-- wp:pattern {"slug":"bifrost-noise/post-byline-default"} /-->
+```
+
+Or use pattern placeholders:
+
+```html
+<!-- wp:pattern {"slug":"core/query-standard-posts"} /-->
+```
+
+## Pattern Categories
+
+Organize patterns into categories:
+
+```php functions.php
+register_block_pattern_category(
+	'bifrost-music',
+	[
+		'label' => __('Music', 'bifrost-noise'),
+	]
+);
+```
+
+<Tip>
+Create custom pattern categories to organize theme-specific patterns separately from WordPress core patterns.
+</Tip>
+
+## Pattern Variations
+
+Provide multiple variations of similar patterns:
+
+- `post-byline-default.php` - Full byline with avatar, author, date, categories
+- `post-byline-short.php` - Minimal byline with just author and date
+
+## Loading Patterns
+
+Bifrost Noise auto-loads pattern files from the `/patterns/` directory. You can also register patterns programmatically:
+
+```php
+add_action('init', function() {
+    register_block_pattern(
+        'my-theme/my-pattern',
+        [
+            'title'   => 'My Pattern',
+            'content' => '<!-- wp:paragraph --><p>Hello!</p><!-- /wp:paragraph -->',
+        ]
+    );
+});
+```
+
+## Pattern Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Descriptive Names" icon="tag">
+    Name patterns clearly: `archive-header-default` not `header1`
+  </Card>
+  <Card title="Add Keywords" icon="key">
+    Include relevant keywords for easier discovery
+  </Card>
+  <Card title="Provide Variations" icon="clone">
+    Offer multiple layouts for the same content type
+  </Card>
+  <Card title="Keep It Simple" icon="minimize">
+    Patterns should be starting points, not complete designs
+  </Card>
+</CardGroup>
+
+## Testing Patterns
+
+<Steps>
+  <Step title="Access Pattern Library">
+    In the block editor, click the **+** button and select **Patterns**
+  </Step>
+  <Step title="Find Your Pattern">
+    Navigate to the appropriate category or search by keyword
+  </Step>
+  <Step title="Insert Pattern">
+    Click the pattern to insert it into your content
+  </Step>
+  <Step title="Customize">
+    Edit the inserted blocks as needed - patterns are templates, not locked content
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Templates" icon="file" href="/theme/templates">
+    Learn about block templates
+  </Card>
+  <Card title="Theme.json" icon="gear" href="/theme/theme-json">
+    Configure global styles
+  </Card>
+</CardGroup>

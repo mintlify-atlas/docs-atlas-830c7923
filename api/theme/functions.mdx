@@ -1,0 +1,534 @@
+---
+title: Theme Functions
+description: Helper functions and utilities available in the Bifrost Noise theme
+---
+
+The Bifrost Noise theme provides a set of helper functions and utilities that developers can use to interact with the theme's architecture and services.
+
+## Global Functions
+
+These functions are defined in the global namespace under `Bifrost\Noise`.
+
+### theme()
+
+Returns the theme application instance. This is the primary entry point for accessing the theme's application container and services.
+
+**Location:** src/functions-helpers.php:22
+
+```php
+function theme(): Application
+```
+
+**Returns:** (Application) The theme application instance
+
+**Example:**
+
+```php
+use function Bifrost\Noise\theme;
+
+// Get the theme instance
+$theme = theme();
+
+// Access the container
+$container = $theme->container();
+
+// Boot the theme (called automatically)
+$theme->boot();
+```
+
+**Usage in theme:**
+
+```php
+// functions.php:26
+add_action('after_setup_theme', theme(...), 999);
+```
+
+---
+
+### container()
+
+Helper function for quickly accessing the service container. Developers can access any concrete implementation by passing in a reference to its abstract identifier.
+
+**Location:** src/functions-helpers.php:39
+
+```php
+function container(): Container
+```
+
+**Returns:** (Container) The service container instance
+
+**Example:**
+
+```php
+use function Bifrost\Noise\container;
+
+// Get a service from the container
+$registry = container()->get(PostTypeModifierRegistry::class);
+
+// Check if a service is bound
+if (container()->has(ServiceClass::class)) {
+    $service = container()->get(ServiceClass::class);
+}
+```
+
+---
+
+## Application Methods
+
+The `Application` class (extended by `Theme`) provides the following public methods:
+
+### container()
+
+Get the container instance.
+
+**Location:** src/Core/Application.php:85
+
+```php
+public function container(): Container
+```
+
+**Returns:** (Container) The dependency injection container
+
+**Example:**
+
+```php
+$container = theme()->container();
+$service = $container->get(MyService::class);
+```
+
+---
+
+### register()
+
+Register a service provider with the application.
+
+**Location:** src/Core/Application.php:93
+
+```php
+public function register(ServiceProvider|string $provider): void
+```
+
+**Parameters:**
+- `$provider` (ServiceProvider|string) - Service provider instance or class name
+
+**Throws:** InvalidArgumentException if the provider is not a valid ServiceProvider class
+
+**Example:**
+
+```php
+use Bifrost\Noise\Core\ServiceProvider;
+
+class MyServiceProvider extends ServiceProvider {
+    public function register(): void {
+        $this->container->singleton(MyService::class);
+    }
+}
+
+// Register the provider
+theme()->register(MyServiceProvider::class);
+```
+
+---
+
+### boot()
+
+Boots all service providers that implement the `Bootable` interface. This is called automatically on the `after_setup_theme` hook.
+
+**Location:** src/Core/Application.php:113
+
+```php
+public function boot(): void
+```
+
+**Example:**
+
+```php
+// Called automatically in functions.php
+add_action('after_setup_theme', fn() => theme()->boot(), 999999);
+```
+
+---
+
+## Container Methods
+
+The service container provides dependency injection capabilities:
+
+### get()
+
+Resolve a service from the container.
+
+```php
+public function get(string $abstract): mixed
+```
+
+**Parameters:**
+- `$abstract` (string) - The service class name or identifier
+
+**Returns:** (mixed) The resolved service instance
+
+**Example:**
+
+```php
+use function Bifrost\Noise\container;
+
+$loader = container()->get(StylesheetLoader::class);
+```
+
+---
+
+### has()
+
+Check if a service is bound in the container.
+
+```php
+public function has(string $abstract): bool
+```
+
+**Parameters:**
+- `$abstract` (string) - The service class name or identifier
+
+**Returns:** (bool) Whether the service is bound
+
+---
+
+### singleton()
+
+Register a singleton binding in the container.
+
+```php
+public function singleton(string $abstract, Closure|string|null $concrete = null): void
+```
+
+**Parameters:**
+- `$abstract` (string) - The service identifier
+- `$concrete` (Closure|string|null) - The implementation or factory closure
+
+---
+
+### instance()
+
+Register an existing instance in the container.
+
+```php
+public function instance(string $abstract, mixed $instance): void
+```
+
+**Parameters:**
+- `$abstract` (string) - The service identifier
+- `$instance` (mixed) - The instance to bind
+
+---
+
+## Service Classes
+
+### Block Binding Sources
+
+#### BindingSource (Abstract)
+
+Base class for creating custom block binding sources.
+
+**Location:** src/Block/Binding/BindingSource.php
+
+**Methods:**
+
+```php
+// Get the binding source name
+public function getName(): string
+
+// Get the human-readable label
+abstract public function getLabel(): string
+
+// Get block context keys this binding uses
+public function usesContext(): array
+
+// Handle the binding logic
+abstract public function callback(
+    array $args, 
+    WP_Block $block, 
+    string $name
+): string|int|null
+```
+
+**Available Sources:**
+
+- `Sources\Album` - Album metadata bindings (src/Block/Binding/Sources/Album.php)
+- `Sources\PostType` - Post type metadata bindings (src/Block/Binding/Sources/PostType.php)
+- `Sources\Query` - Query context bindings (src/Block/Binding/Sources/Query.php)
+- `Sources\Term` - Taxonomy term bindings (src/Block/Binding/Sources/Term.php)
+- `Sources\User` - User metadata bindings (src/Block/Binding/Sources/User.php)
+
+---
+
+### Post Type Modifiers
+
+#### PostTypeModifier (Abstract)
+
+Base class for modifying post type registration arguments.
+
+**Location:** src/PostType/PostTypeModifier.php
+
+**Methods:**
+
+```php
+// Modify post type arguments
+abstract public function modify(array $args): array
+```
+
+**Available Modifiers:**
+
+- `Modifiers\Album` - Modifies `music_album` post type (src/PostType/Modifiers/Album.php)
+- `Modifiers\Artist` - Modifies `music_artist` post type (src/PostType/Modifiers/Artist.php)
+- `Modifiers\Post` - Modifies `post` post type (src/PostType/Modifiers/Post.php)
+
+---
+
+#### PostTypeModifierRegistry
+
+Registry for post type modifiers.
+
+**Location:** src/PostType/PostTypeModifierRegistry.php
+
+**Methods:**
+
+```php
+// Register a modifier for a post type
+public function register(string $postType, string $modifierClass): void
+
+// Check if a modifier is registered
+public function isRegistered(string $postType): bool
+
+// Get a registered modifier class
+public function get(string $postType): string|null
+```
+
+**Example:**
+
+```php
+use function Bifrost\Noise\container;
+use Bifrost\Noise\PostType\PostTypeModifierRegistry;
+
+$registry = container()->get(PostTypeModifierRegistry::class);
+
+// Register a custom modifier
+$registry->register('my_post_type', MyPostTypeModifier::class);
+
+// Check if registered
+if ($registry->isRegistered('my_post_type')) {
+    $modifier = $registry->get('my_post_type');
+}
+```
+
+---
+
+### Stylesheet Management
+
+#### Stylesheet
+
+Represents a block-specific stylesheet.
+
+**Location:** src/Block/Stylesheet/Stylesheet.php
+
+**Methods:**
+
+```php
+// Get the block namespace (e.g., 'core')
+public function getNamespace(): string
+
+// Get the block slug (e.g., 'cover')
+public function getSlug(): string
+
+// Get the full block name (e.g., 'core/cover')
+public function getBlockName(): string
+
+// Get the stylesheet file path
+public function getFilePath(): string
+
+// Get the stylesheet URL
+public function getFileUrl(): string
+
+// Get asset data (dependencies, version)
+public function getAssetData(): array
+```
+
+---
+
+#### StylesheetIterator
+
+Discovers and iterates over block stylesheets.
+
+**Location:** src/Block/Stylesheet/StylesheetIterator.php
+
+**Usage:**
+
+```php
+use function Bifrost\Noise\container;
+use Bifrost\Noise\Block\Stylesheet\StylesheetIterator;
+
+$iterator = container()->get(StylesheetIterator::class);
+
+foreach ($iterator as $stylesheet) {
+    echo $stylesheet->getBlockName();
+    echo $stylesheet->getFilePath();
+}
+```
+
+---
+
+## Theme Constants
+
+The `Theme` class defines the following constants:
+
+### NAMESPACE
+
+The theme's namespace used as a hook prefix.
+
+**Location:** src/Theme.php:27
+
+```php
+protected const NAMESPACE = 'bifrost/noise';
+```
+
+**Used for hooks:**
+- `bifrost/noise/register`
+- `bifrost/noise/booted`
+
+---
+
+### PROVIDERS
+
+The theme's default service providers.
+
+**Location:** src/Theme.php:32-41
+
+```php
+protected const PROVIDERS = [
+    ThemeServiceProvider::class,
+    Block\Binding\BindingServiceProvider::class,
+    Block\Render\RenderServiceProvider::class,
+    Block\Stylesheet\StylesheetServiceProvider::class,
+    Editor\EditorServiceProvider::class,
+    Frontend\FrontendServiceProvider::class,
+    Gutenberg\GutenbergServiceProvider::class,
+    PostType\PostTypeServiceProvider::class
+];
+```
+
+---
+
+## WordPress Helper Functions Used
+
+The theme utilizes standard WordPress functions throughout. Key functions include:
+
+### Theme File Functions
+
+```php
+// Get theme file path
+get_parent_theme_file_path('path/to/file.php')
+
+// Get theme file URI
+get_parent_theme_file_uri('path/to/file.js')
+```
+
+### Script/Style Functions
+
+```php
+// Enqueue script
+wp_enqueue_script($handle, $src, $deps, $version, $in_footer)
+
+// Enqueue style
+wp_enqueue_style($handle, $src, $deps, $version, $media)
+
+// Enqueue block style
+wp_enqueue_block_style($block_name, $args)
+
+// Add style data
+wp_style_add_data($handle, $key, $value)
+
+// Set script translations
+wp_set_script_translations($handle, $domain, $path)
+```
+
+### Block Binding Functions
+
+```php
+// Register block binding source
+register_block_bindings_source($name, $args)
+
+// Get block binding source
+get_block_bindings_source($name)
+```
+
+### Theme Support Functions
+
+```php
+// Add theme support
+add_theme_support($feature, $args)
+```
+
+---
+
+## Creating Custom Services
+
+To create a custom service and register it with the theme:
+
+### Step 1: Create a Service Provider
+
+```php
+namespace MyPlugin\Services;
+
+use Bifrost\Noise\Core\ServiceProvider;
+use Bifrost\Noise\Contracts\Bootable;
+
+class MyServiceProvider extends ServiceProvider implements Bootable
+{
+    public function register(): void
+    {
+        $this->container->singleton(MyService::class);
+    }
+
+    public function boot(): void
+    {
+        $this->container->get(MyService::class)->init();
+    }
+}
+```
+
+### Step 2: Create Your Service
+
+```php
+namespace MyPlugin\Services;
+
+class MyService
+{
+    public function init(): void
+    {
+        add_action('init', [$this, 'doSomething']);
+    }
+
+    public function doSomething(): void
+    {
+        // Your implementation
+    }
+}
+```
+
+### Step 3: Register the Provider
+
+```php
+add_action('bifrost/noise/register', function($app) {
+    $app->register(MyPlugin\Services\MyServiceProvider::class);
+});
+```
+
+---
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Theme Hooks" icon="webhook" href="/api/theme/hooks">
+    Actions and filters available in the theme
+  </Card>
+  <Card title="Theme Overview" icon="paintbrush" href="/theme/overview">
+    Learn about the theme's architecture
+  </Card>
+</CardGroup>

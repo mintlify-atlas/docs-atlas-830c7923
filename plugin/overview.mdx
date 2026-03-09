@@ -1,0 +1,120 @@
+---
+title: Plugin Overview
+description: Introduction to the Bifrost Music plugin architecture and features
+---
+
+The **Bifrost Music** plugin is a modern WordPress plugin that demonstrates best practices for creating custom post types, taxonomies, and block editor integrations. It provides a complete music catalog system with Artists, Albums, and Genres.
+
+## Purpose
+
+This plugin serves as a reference implementation for WordPress developers, showcasing:
+
+- Service container architecture for dependency injection
+- Custom post types with proper capability management
+- Hierarchical content relationships (Artists → Albums)
+- Taxonomy implementation
+- Block editor (Gutenberg) integration with React
+- REST API customization
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Custom Post Types" icon="file-lines">
+    Artist and Album post types with custom capabilities, labels, and admin UI enhancements
+  </Card>
+  <Card title="Genre Taxonomy" icon="tags">
+    Non-hierarchical taxonomy for categorizing albums by musical genre
+  </Card>
+  <Card title="Parent-Child Relationships" icon="diagram-project">
+    Albums can be associated with Artist posts using WordPress's parent-child relationship model
+  </Card>
+  <Card title="Block Editor Integration" icon="cube">
+    Custom React component for selecting parent artists directly in the block editor
+  </Card>
+</CardGroup>
+
+## Technical Requirements
+
+- **WordPress Version:** 6.9 or higher
+- **PHP Version:** 8.1 or higher
+- **Modern JavaScript:** Uses `@wordpress/scripts` build process
+
+## Plugin Structure
+
+```plaintext
+bifrost-music/
+├── inc/
+│   ├── Container/           # Dependency injection container
+│   ├── Content/             # Post types and taxonomies
+│   ├── Contracts/           # Interfaces
+│   ├── Core/                # Application and service provider classes
+│   ├── Editor/              # Block editor asset management
+│   └── Support/             # Helper classes and constants
+├── src/
+│   └── editor.js            # React components for the block editor
+├── plugin.php               # Main plugin file
+└── Lifecycle.php            # Activation/deactivation hooks
+```
+
+## Content Types
+
+### Artists (`music_artist`)
+
+Represents musicians or bands. Features include:
+- Custom capability type for granular permission control
+- Archive page at `/artists`
+- Support for title, editor, excerpt, thumbnail, and custom fields
+- Non-hierarchical structure
+
+### Albums (`music_album`)
+
+Represents music albums released by artists. Features include:
+- Parent relationship with Artist post type
+- Archive page at `/albums`
+- Custom REST API field for parent artist
+- Admin column showing associated artist
+- Genre taxonomy support
+
+### Genres (`music_genre`)
+
+A non-hierarchical taxonomy for categorizing albums:
+- Tag-like behavior (non-hierarchical)
+- Applied to albums only
+- Archive pages at `/genres/{genre-slug}`
+- Custom capabilities for term management
+
+## Architecture Highlights
+
+The plugin uses a **service container pattern** with service providers, making it:
+
+- **Modular:** Each feature is encapsulated in its own service class
+- **Testable:** Dependencies are injected, not hardcoded
+- **Extensible:** Third-party developers can register custom services via hooks
+- **Organized:** Clear separation between registration and bootstrapping logic
+
+See [Architecture](./architecture) for detailed implementation details.
+
+## REST API Integration
+
+The plugin extends WordPress's REST API:
+
+- All post types are exposed via `show_in_rest => true`
+- Custom `parent` field registered for albums via `register_rest_field()`
+- Allows block editor to query and update parent relationships
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Architecture" icon="sitemap" href="./architecture">
+    Learn about the service container and application lifecycle
+  </Card>
+  <Card title="Custom Post Types" icon="file-code" href="./custom-post-types">
+    Explore the Artist and Album post type implementations
+  </Card>
+  <Card title="Taxonomies" icon="tags" href="./taxonomies">
+    Understand the Genre taxonomy implementation
+  </Card>
+  <Card title="Block Editor" icon="cube" href="./block-editor-integration">
+    See how the parent artist selector works
+  </Card>
+</CardGroup>

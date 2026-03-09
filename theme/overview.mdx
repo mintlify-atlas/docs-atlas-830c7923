@@ -1,0 +1,128 @@
+---
+title: "Theme Overview"
+description: "Introduction to the Bifrost Noise Full Site Editing theme"
+---
+
+## About Bifrost Noise
+
+Bifrost Noise is a modern Full Site Editing (FSE) theme built for WordPress 6.8+ that showcases the latest WordPress theme development patterns and capabilities.
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Full Site Editing" icon="wand-magic-sparkles">
+    Complete FSE support with block-based templates and template parts
+  </Card>
+  <Card title="Theme.json v3" icon="file-code">
+    Modern theme configuration using the latest theme.json schema
+  </Card>
+  <Card title="Block Patterns" icon="grid">
+    Pre-designed block patterns for common layouts
+  </Card>
+  <Card title="Custom Templates" icon="file">
+    Specialized templates for Artists, Albums, and custom post types
+  </Card>
+</CardGroup>
+
+## Theme Structure
+
+```plaintext
+bifrost-noise/
+├── functions.php          # Theme bootstrap
+├── style.css              # Theme metadata
+├── theme.json             # Theme configuration (v3)
+├── templates/             # Block templates
+│   ├── index.html
+│   ├── single-post.html
+│   ├── single-music_artist.html
+│   └── single-music_album.html
+├── parts/                 # Template parts
+│   ├── header.html
+│   └── footer.html
+├── patterns/              # Block patterns
+│   ├── archive-header/
+│   ├── archive-query/
+│   └── single-header/
+├── src/                   # Source assets
+│   ├── editor/            # Editor styles
+│   ├── frontend/          # Frontend styles
+│   └── components/        # Block components
+└── public/                # Built assets
+```
+
+## Requirements
+
+- **WordPress**: 6.8 or higher
+- **PHP**: 8.1 or higher
+- **Node.js**: 18+ (for development)
+
+## Theme Features
+
+### Full Site Editing
+
+Bifrost Noise is built entirely with Full Site Editing capabilities:
+
+- Block-based templates for all template types
+- Customizable template parts (header, footer, etc.)
+- Global styles defined in theme.json
+- No legacy theme template files
+
+### Block Patterns
+
+The theme includes reusable block patterns for:
+
+- Archive headers
+- Query loops and grids
+- Post metadata and bylines
+- Single post headers
+- Custom post type layouts
+
+### Custom Post Type Support
+
+Dedicated templates for the Bifrost Music plugin:
+
+- `single-music_artist.html` - Artist single view
+- `single-music_album.html` - Album single view  
+- `archive-music_artist.html` - Artist archive
+- `archive-music_album.html` - Album archive
+- `taxonomy-music_genre.html` - Genre taxonomy archive
+
+## Service Architecture
+
+The theme uses a modern service-based architecture:
+
+```php functions.php
+namespace Bifrost\Noise;
+
+# Load the autoloader
+if (! class_exists(Theme::class) && is_file(__DIR__ . '/vendor/autoload.php')) {
+	require_once __DIR__ . '/vendor/autoload.php';
+}
+
+# Initialize the theme
+add_action('after_setup_theme', theme(...), 999);
+
+# Boot registered services
+add_action('after_setup_theme', fn() => theme()->boot(), 999999);
+```
+
+<Info>
+The theme uses a service container pattern similar to the Bifrost Music plugin for dependency injection and service management.
+</Info>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Full Site Editing" icon="wand-magic-sparkles" href="/theme/full-site-editing">
+    Learn about FSE features and capabilities
+  </Card>
+  <Card title="Theme.json Configuration" icon="gear" href="/theme/theme-json">
+    Explore theme.json settings and customization
+  </Card>
+  <Card title="Block Patterns" icon="grid" href="/theme/patterns">
+    Understand how to use and create patterns
+  </Card>
+  <Card title="Templates" icon="file" href="/theme/templates">
+    Dive into the template system
+  </Card>
+</CardGroup>

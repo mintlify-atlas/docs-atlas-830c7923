@@ -1,0 +1,310 @@
+---
+title: Taxonomies
+description: Implementation of the Genre taxonomy for music albums
+---
+
+The plugin implements a **Genre taxonomy** for categorizing music albums. It demonstrates WordPress taxonomy registration with custom capabilities and admin messaging.
+
+## Genre Taxonomy
+
+The Genre taxonomy is a non-hierarchical (tag-like) taxonomy applied to Album posts.
+
+### Registration
+
+Location: `inc/Content/Genre.php:34`
+
+```php
+private function register(): void
+{
+    register_taxonomy(
+        Definitions::TAXONOMY_GENRE,
+        [
+            Definitions::POST_TYPE_ALBUM
+        ],
+        [
+        'public'            => true,
+        'show_ui'           => true,
+        'show_in_nav_menus' => true,
+        'show_in_rest'      => true,
+        'show_tagcloud'     => true,
+        'show_admin_column' => true,
+        'hierarchical'      => false,
+        'query_var'         => Definitions::TAXONOMY_GENRE,
+        // ... capabilities and labels
+    ]);
+}
+```
+
+<Note>
+`Definitions::TAXONOMY_GENRE` is defined as `'music_genre'` in `inc/Support/Definitions.php:25`
+</Note>
+
+### Key Configuration Options
+
+#### Non-Hierarchical Structure
+
+```php
+'hierarchical' => false,
+```
+
+This makes the taxonomy behave like tags rather than categories:
+- Uses a text input for adding terms (not a checkbox tree)
+- Terms don't have parent-child relationships
+- Better suited for genres which typically don't have hierarchies
+
+#### Show in Admin Column
+
+```php
+'show_admin_column' => true,
+```
+
+Automatically adds a "Genres" column to the Albums list table in wp-admin.
+
+#### REST API Support
+
+```php
+'show_in_rest' => true,
+```
+
+Exposes the taxonomy in the WordPress REST API, allowing:
+- Block editor integration
+- Querying via `/wp-json/wp/v2/music_genre`
+- Filtering albums by genre in REST requests
+
+### Custom Capabilities
+
+Location: `inc/Content/Genre.php:50`
+
+```php
+'capabilities' => [
+    'manage_terms' => 'manage_music_genres',
+    'edit_terms'   => 'edit_music_genres',
+    'delete_terms' => 'delete_music_genres',
+    'assign_terms' => 'assign_music_genres'
+],
+```
+
+These capabilities allow granular control over who can:
+- **manage_terms:** Access the taxonomy management screen
+- **edit_terms:** Create and edit genre terms
+- **delete_terms:** Delete genre terms
+- **assign_terms:** Assign genres to albums
+
+<Info>
+These capabilities are granted to administrators during plugin activation (see `inc/Lifecycle.php:48`).
+</Info>
+
+### Taxonomy Labels
+
+Location: `inc/Content/Genre.php:56`
+
+Comprehensive labels improve the admin user experience:
+
+```php
+'labels' => [
+    'name'                  => __('Genres',                 'bifrost-music'),
+    'singular_name'         => __('Genre',                  'bifrost-music'),
+    'menu_name'             => __('Genres',                 'bifrost-music'),
+    'name_admin_bar'        => __('Genre',                  'bifrost-music'),
+    'search_items'          => __('Search Genres',          'bifrost-music'),
+    'popular_items'         => __('Popular Genres',         'bifrost-music'),
+    'all_items'             => __('All Genres',             'bifrost-music'),
+    'edit_item'             => __('Edit Genre',             'bifrost-music'),
+    'view_item'             => __('View Genre',             'bifrost-music'),
+    'update_item'           => __('Update Genre',           'bifrost-music'),
+    'add_new_item'          => __('Add New Genre',          'bifrost-music'),
+    'new_item_name'         => __('New Genre Name',         'bifrost-music'),
+    'not_found'             => __('No genres found.',       'bifrost-music'),
+    'no_terms'              => __('No genres',              'bifrost-music'),
+    'items_list_navigation' => __('Genres list navigation', 'bifrost-music'),
+    'items_list'            => __('Genres list',            'bifrost-music'),
+
+    // Non-hierarchical only labels
+    'separate_items_with_commas' => __('Separate genres with commas',      'bifrost-music'),
+    'add_or_remove_items'        => __('Add or remove genres',             'bifrost-music'),
+    'choose_from_most_used'      => __('Choose from the most used genres', 'bifrost-music')
+],
+```
+
+<Tip>
+The last three labels are specific to non-hierarchical taxonomies and control the tag-like interface.
+</Tip>
+
+### URL Structure
+
+Location: `inc/Content/Genre.php:81`
+
+```php
+'rewrite' => [
+    'slug'         => 'genres',
+    'with_front'   => false,
+    'hierarchical' => false,
+    'ep_mask'      => EP_NONE
+]
+```
+
+This creates URLs like:
+- Single genre archive: `https://example.com/genres/rock/`
+- Genre feeds: `https://example.com/genres/rock/feed/`
+
+## Custom Admin Messages
+
+The Genre class provides custom messages for taxonomy operations.
+
+Location: `inc/Content/Genre.php:93`
+
+```php
+private function termUpdatedMessages(array $messages): array
+{
+    // Add the music genre messages.
+    $messages[Definitions::TAXONOMY_GENRE] = [
+        0 => '',
+        1 => __('Genre added.',       'bifrost-music'),
+        2 => __('Genre deleted.',     'bifrost-music'),
+        3 => __('Genre updated.',     'bifrost-music'),
+        4 => __('Genre not added.',   'bifrost-music'),
+        5 => __('Genre not updated.', 'bifrost-music'),
+        6 => __('Genres deleted.',    'bifrost-music'),
+    ];
+
+    return $messages;
+}
+```
+
+These messages appear when:
+- Adding a new genre (message 1)
+- Deleting a genre (message 2)
+- Updating an existing genre (message 3)
+- Bulk deleting genres (message 6)
+
+## Service Implementation
+
+The Genre class implements the `Bootable` interface:
+
+Location: `inc/Content/Genre.php:24`
+
+```php
+public function boot(): void
+{
+    add_action('init', $this->register(...), 9);
+
+    add_filter('term_updated_messages', $this->termUpdatedMessages(...), 5);
+}
+```
+
+<Warning>
+The taxonomy is registered at priority `9` on the `init` hook, which is **before** the default priority of `10`. This ensures the taxonomy exists before the Album post type tries to associate with it.
+</Warning>
+
+## Querying Albums by Genre
+
+### WP_Query Example
+
+```php
+$args = [
+    'post_type' => 'music_album',
+    'tax_query' => [
+        [
+            'taxonomy' => 'music_genre',
+            'field'    => 'slug',
+            'terms'    => 'rock',
+        ],
+    ],
+];
+
+$query = new WP_Query($args);
+```
+
+### REST API Example
+
+```bash
+GET /wp-json/wp/v2/music_album?music_genre=5
+```
+
+This returns all albums tagged with the genre that has ID 5.
+
+## Capability Management
+
+Like the post types, Genre capabilities are managed during the plugin lifecycle.
+
+### Activation
+
+Location: `inc/Lifecycle.php:48`
+
+```php
+public static function activate(): void
+{
+    if ($role = get_role('administrator')) {
+        // Taxonomy caps.
+        $role->add_cap('manage_music_genres');
+        $role->add_cap('edit_music_genres');
+        $role->add_cap('delete_music_genres');
+        $role->add_cap('assign_music_genres');
+    }
+}
+```
+
+### Uninstall
+
+Location: `inc/Lifecycle.php:107`
+
+```php
+public static function uninstall(): void
+{
+    if ($role = get_role('administrator')) {
+        // Genre caps.
+        $role->remove_cap('manage_music_genres');
+        $role->remove_cap('edit_music_genres');
+        $role->remove_cap('delete_music_genres');
+        $role->remove_cap('assign_music_genres');
+    }
+}
+```
+
+## Integration with Albums
+
+The Genre taxonomy is registered for the Album post type:
+
+```php
+register_taxonomy(
+    Definitions::TAXONOMY_GENRE,
+    [
+        Definitions::POST_TYPE_ALBUM  // Applied to albums only
+    ],
+    // ... configuration
+);
+```
+
+This means:
+- Genres appear in the Album editor sidebar
+- Albums can be filtered by genre in wp-admin
+- Genre archives show only albums (not artists)
+- The taxonomy is available in block patterns and queries
+
+## Best Practices Demonstrated
+
+<CardGroup cols={2}>
+  <Card title="Non-Hierarchical Design" icon="tags">
+    Using `hierarchical => false` provides a tag-like interface suitable for genres
+  </Card>
+  <Card title="Custom Capabilities" icon="shield">
+    Separate capabilities allow role-based access control for taxonomy management
+  </Card>
+  <Card title="Internationalization" icon="language">
+    All strings use `__()` for translation support
+  </Card>
+  <Card title="Clean URLs" icon="link">
+    Custom rewrite rules create SEO-friendly URLs like `/genres/rock/`
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Post Types" icon="file-code" href="./custom-post-types">
+    Learn how the Album post type uses this taxonomy
+  </Card>
+  <Card title="Block Editor Integration" icon="cube" href="./block-editor-integration">
+    See how the block editor interacts with genres
+  </Card>
+</CardGroup>
